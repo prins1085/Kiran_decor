@@ -15,6 +15,8 @@ import {
 } from "@mui/material";
 import clsx from "clsx";
 import BlindForm from "./BlindForm";
+import SofaForm from "./SofaForm";
+import MattressForm from "./MattressForm";
 
 interface QuotationItem {
   id: number;
@@ -153,6 +155,16 @@ const QuotationForm: React.FC = () => {
                   {item.type === "blind" && (
                     <BlindForm
                       onTotalChange={(total) => updateItemTotal(item.id, total)}
+                    />
+                  )}
+                  {item.type === "sofa" && (
+                    <SofaForm
+                    onTotalChange={(total) => updateItemTotal(item.id, total)}
+                    />
+                  )}
+                  {item.type === "mattress" && (
+                    <MattressForm
+                    onTotalChange={(total) => updateItemTotal(item.id, total)}
                     />
                   )}
                   {/* Add other form components for blind, sofa, and mattress */}
