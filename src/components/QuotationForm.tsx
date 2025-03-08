@@ -14,6 +14,7 @@ import {
   IconButton,
 } from "@mui/material";
 import clsx from "clsx";
+import BlindForm from "./BlindForm";
 
 interface QuotationItem {
   id: number;
@@ -146,6 +147,11 @@ const QuotationForm: React.FC = () => {
                 <CardContent className="bg-white border-t border-gray-200">
                   {item.type === "curtain" && (
                     <CurtainForm
+                      onTotalChange={(total) => updateItemTotal(item.id, total)}
+                    />
+                  )}
+                  {item.type === "blind" && (
+                    <BlindForm
                       onTotalChange={(total) => updateItemTotal(item.id, total)}
                     />
                   )}

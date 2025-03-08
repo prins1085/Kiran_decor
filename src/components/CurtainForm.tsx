@@ -27,15 +27,15 @@ const CurtainForm: React.FC<CurtainFormProps> = ({ onTotalChange }) => {
     channelCost: 0,
     dimoutMeters: 0,
     dimoutCost: 0,
-    sierraMeters: 0,
-    sierraCost: 0,
+    sheerMeters: 0,
+    sheerCost: 0,
   });
   const [prices, setPrices] = useState({
     perMeter: "",
     labor: "",
     channelPerFeet: "",
     dimoutPerMeter: "",
-    sierraPerMeter: "",
+    sheerPerMeter: "",
   });
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const CurtainForm: React.FC<CurtainFormProps> = ({ onTotalChange }) => {
         totalMeters: totalM,
         channelFeet: channelF,
         dimoutMeters: totalM,
-        sierraMeters: totalM,
+        sheerMeters: totalM,
       });
     }
   }, [dimensions]);
@@ -63,8 +63,8 @@ const CurtainForm: React.FC<CurtainFormProps> = ({ onTotalChange }) => {
       calculations.channelFeet * Number(prices.channelPerFeet);
     const dimoutCost =
       calculations.dimoutMeters * Number(prices.dimoutPerMeter);
-    const sierraCost =
-      calculations.sierraMeters * Number(prices.sierraPerMeter);
+    const sheerCost =
+      calculations.sheerMeters * Number(prices.sheerPerMeter);
     const laborCost = Number(prices.labor);
 
     const newCalculations = {
@@ -73,19 +73,19 @@ const CurtainForm: React.FC<CurtainFormProps> = ({ onTotalChange }) => {
       laborCost,
       channelCost,
       dimoutCost,
-      sierraCost,
+      sheerCost,
     };
 
     setCalculations(newCalculations);
 
-    const total = totalLeather + laborCost + channelCost + dimoutCost + sierraCost;
+    const total = totalLeather + laborCost + channelCost + dimoutCost + sheerCost;
     onTotalChange(total);
   }, [
     prices,
     calculations.totalMeters,
     calculations.channelFeet,
     calculations.dimoutMeters,
-    calculations.sierraMeters,
+    calculations.sheerMeters,
   ]);
 
   return (
@@ -218,21 +218,21 @@ const CurtainForm: React.FC<CurtainFormProps> = ({ onTotalChange }) => {
         </div>
       </div>
       <div className="space-y-3">
-        <Typography variant="subtitle1" fontWeight={700}>Sierra</Typography>
+        <Typography variant="subtitle1" fontWeight={700}>Sheer</Typography>
         <div className="grid grid-cols-2 gap-4">
           <TextField
             label="Total Meters"
             fullWidth
-            value={calculations.sierraMeters.toFixed(2)}
+            value={calculations.sheerMeters.toFixed(2)}
             size="small"
             disabled
           />
           <TextField
             label="Price per Meter"
             fullWidth
-            value={prices.sierraPerMeter}
+            value={prices.sheerPerMeter}
             onChange={(e) =>
-              setPrices({ ...prices, sierraPerMeter: e.target.value })
+              setPrices({ ...prices, sheerPerMeter: e.target.value })
             }
             type="number"
             size="small"
@@ -260,8 +260,8 @@ const CurtainForm: React.FC<CurtainFormProps> = ({ onTotalChange }) => {
             <span>₹{calculations.dimoutCost.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Sierra Cost:</span>
-            <span>₹{calculations.sierraCost.toFixed(2)}</span>
+            <span>Sheer Cost:</span>
+            <span>₹{calculations.sheerCost.toFixed(2)}</span>
           </div>
           <div className="flex justify-between font-medium pt-2 border-t">
             <span>Total:</span>
@@ -272,7 +272,7 @@ const CurtainForm: React.FC<CurtainFormProps> = ({ onTotalChange }) => {
                 calculations.laborCost +
                 calculations.channelCost +
                 calculations.dimoutCost +
-                calculations.sierraCost
+                calculations.sheerCost
               ).toFixed(2)}
             </span>
           </div>
