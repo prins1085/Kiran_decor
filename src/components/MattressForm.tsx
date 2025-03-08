@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { TextField, Typography, MenuItem } from "@mui/material";
 
-const MattressForm = ({ onTotalChange }) => {
+interface MattressFormProps {
+    onTotalChange: (total: number) => void;
+  }
+
+const MattressForm: React.FC<MattressFormProps> = ({ onTotalChange }) => {
   const [company, setCompany] = useState("sleepwell");
   const [width, setWidth] = useState("");
   const [height, setHeight] = useState("");
