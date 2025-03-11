@@ -1,186 +1,297 @@
-import React, { useState } from "react";
-import { Plus, ChevronDown, ChevronUp, Trash } from "lucide-react"; // Import Trash icon
+
+import { useState, useCallback, useEffect } from "react";
+import { Plus, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import CurtainForm from "./CurtainForm";
-import {
-  Select,
-  MenuItem,
-  Button,
-  FormControl,
-  InputLabel,
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  IconButton,
-} from "@mui/material";
-import clsx from "clsx";
 import BlindForm from "./BlindForm";
 import SofaForm from "./SofaForm";
 import MattressForm from "./MattressForm";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
 
 interface QuotationItem {
   id: number;
   type: string;
-  details: any;
+  name: string;
   isOpen: boolean;
   total: number;
+  details?: Record<string, any>;
 }
 
-const QuotationForm: React.FC = () => {
+const QuotationForm = ({ initialItems = [], onQuotationChange }: { initialItems?: QuotationItem[], onQuotationChange?: (items: QuotationItem[]) => void }) => {
   const [selectedType, setSelectedType] = useState<string>("");
+  const [itemName, setItemName] = useState("");
   const [items, setItems] = useState<QuotationItem[]>([]);
+  
+  // Deep clone function to ensure all nested properties are preserved
+  const deepClone = (obj: any): any => {
+    if (obj === null || typeof obj !== "object") return obj;
+    if (Array.isArray(obj)) return obj.map(deepClone);
+    
+    const cloned: Record<string, any> = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        cloned[key] = deepClone(obj[key]);
+      }
+    }
+    return cloned;
+  };
+  
+  // Initialize items from props and ensure they persist
+  useEffect(() => {
+    if (initialItems && initialItems.length > 0) {
+      // Make sure each item has the isOpen property and details
+      const itemsWithDetails = initialItems.map(item => ({
+        ...item,
+        isOpen: item.isOpen !== undefined ? item.isOpen : true,
+        details: item.details || {}
+      }));
+      
+      console.log("Setting initial items in QuotationForm:", itemsWithDetails);
+      setItems(itemsWithDetails);
+    }
+  }, [initialItems]);
 
   const handleAddItem = () => {
-    if (!selectedType) return;
+    if (!selectedType || !itemName.trim()) return;
 
-    setItems([
-      ...items,
-      {
-        id: Date.now(),
-        type: selectedType,
-        details: {},
-        isOpen: true,
-        total: 0,
-      },
-    ]);
-  };
+    const newItem = {
+      id: Date.now(),
+      type: selectedType,
+      name: itemName.trim(),
+      isOpen: true,
+      total: 0,
+      details: {},
+    };
 
-  const handleRemoveItem = (id: number) => {
-    setItems(items.filter((item) => item.id !== id));
-  };
+    const updatedItems = [...items, newItem];
+    setItems(updatedItems);
+    setSelectedType("");
+    setItemName("");
 
-  const toggleItem = (id: number) => {
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, isOpen: !item.isOpen } : item
-      )
-    );
-  };
-
-  const updateItemTotal = (id: number, total: number) => {
-    setItems(items.map((item) => (item.id === id ? { ...item, total } : item)));
-  };
-
-  const getItemTypeLabel = (type: string) => {
-    switch (type) {
-      case "curtain":
-        return "Curtain";
-      case "blind":
-        return "Blind";
-      case "sofa":
-        return "Sofa";
-      case "mattress":
-        return "Mattress";
-      default:
-        return type;
+    if (onQuotationChange) {
+      onQuotationChange(updatedItems);
     }
   };
 
+  const handleRemoveItem = useCallback((id: number, event: React.MouseEvent) => {
+    // Prevent event propagation to stop the popup from closing
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const updatedItems = items.filter((item) => item.id !== id);
+    setItems(updatedItems);
+    
+    if (onQuotationChange) {
+      onQuotationChange(updatedItems);
+    }
+  }, [items, onQuotationChange]);
+
+  const toggleItem = useCallback((id: number) => {
+    setItems((prevItems) => {
+      const updatedItems = prevItems.map((item) =>
+        item.id === id ? { ...item, isOpen: !item.isOpen } : item
+      );
+      
+      if (onQuotationChange) {
+        onQuotationChange(updatedItems);
+      }
+      
+      return updatedItems;
+    });
+  }, [onQuotationChange]);
+
+  const updateItemTotal = useCallback((id: number, total: number, details?: Record<string, any>) => {
+    setItems((prevItems) => {
+      // Create a deep clone of the previous items to ensure all nested properties are preserved
+      const updatedItems = prevItems.map((item) => {
+        if (item.id === id) {
+          // Preserve existing details and merge with new details
+          const mergedDetails = details 
+            ? { ...(item.details || {}), ...deepClone(details) }
+            : item.details;
+          
+          console.log(`Updating item ${id} with total: ${total} and details:`, mergedDetails);
+          
+          return { 
+            ...item, 
+            total,
+            details: mergedDetails
+          };
+        }
+        return item;
+      });
+      
+      if (onQuotationChange) {
+        onQuotationChange(updatedItems);
+      }
+      
+      return updatedItems;
+    });
+  }, [onQuotationChange]);
+
   const totalQuotationAmount = items.reduce((sum, item) => sum + item.total, 0);
+
+  // Helper function to get the correct form component based on the item type
+  const renderItemForm = useCallback((item: QuotationItem) => {
+    if (!item.isOpen) return null;
+    
+    // Ensure we're passing a deep clone of the initial values to avoid reference issues
+    const initialValues = deepClone(item.details || {});
+    console.log(`Rendering form for ${item.type} with initial values:`, initialValues);
+    
+    const commonProps = {
+      onTotalChange: (total: number, details?: Record<string, any>) => updateItemTotal(item.id, total, details),
+      initialValues: initialValues
+    };
+    
+    switch (item.type) {
+      case "curtain":
+        return <CurtainForm {...commonProps} />;
+      case "blind":
+        return <BlindForm {...commonProps} />;
+      case "sofa":
+        return <SofaForm {...commonProps} />;
+      case "mattress":
+        return <MattressForm {...commonProps} />;
+      default:
+        return null;
+    }
+  }, [updateItemTotal]);
 
   return (
     <div className="space-y-6">
-      <div className="border-t border-gray-200 pt-6">
-        <Typography variant="h6">Quotation Details</Typography>
-
-        <div className="mt-4 flex space-x-4">
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Select Item Type</InputLabel>
-            <Select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              label="Select Item Type"
-            >
-              <MenuItem value="">Select Item Type</MenuItem>
-              <MenuItem value="curtain">Curtain</MenuItem>
-              <MenuItem value="blind">Blind</MenuItem>
-              <MenuItem value="sofa">Sofa</MenuItem>
-              <MenuItem value="mattress">Mattress</MenuItem>
+      <div className="pt-6 border-t">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
+          <div className="space-y-2 w-full sm:w-auto sm:min-w-[180px]">
+            <Label htmlFor="item-type">Item Type</Label>
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger id="item-type" className="w-full">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="curtain">Curtain</SelectItem>
+                <SelectItem value="blind">Blind</SelectItem>
+                <SelectItem value="sofa">Sofa</SelectItem>
+                <SelectItem value="mattress">Mattress</SelectItem>
+              </SelectContent>
             </Select>
-          </FormControl>
+          </div>
 
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleAddItem}
-            startIcon={<Plus />}
+          <div className="space-y-2 w-full sm:w-auto sm:min-w-[180px]">
+            <Label htmlFor="item-name">Item Name</Label>
+            <Input
+              id="item-name"
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+              placeholder="Enter item name"
+              className="w-full"
+            />
+          </div>
+          
+          <Button 
+            onClick={handleAddItem} 
+            className="gap-1 whitespace-nowrap w-full sm:w-auto"
+            disabled={!selectedType || !itemName.trim()}
           >
+            <Plus className="h-4 w-4" />
             Add Item
           </Button>
         </div>
 
-        <div className="mt-6 space-y-4">
-          {items.map((item) => (
-            <Card key={item.id} variant="outlined">
-              <CardActions
-                className={clsx(
-                  "flex justify-between items-center px-4 py-3 cursor-pointer",
-                  item.isOpen ? "bg-indigo-50" : "bg-white"
-                )}
-                onClick={() => toggleItem(item.id)}
+        <div className="space-y-4">
+          <AnimatePresence initial={false}>
+            {items.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
               >
-                <div className="flex items-center space-x-3">
-                  <IconButton size="small">
-                    {item.isOpen ? (
-                      <ChevronUp className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                <Card>
+                  <div
+                    className="flex justify-between items-center p-4 cursor-pointer border-b bg-accent/50 hover:bg-accent/70 transition-colors"
+                    onClick={() => toggleItem(item.id)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {item.isOpen ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <div>
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-sm text-muted-foreground ml-2">({item.type})</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <span className="font-semibold">
+                        ₹{item.total.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => handleRemoveItem(item.id, e)}
+                        type="button" // Make sure it doesn't submit the form
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {item.isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <CardContent className="p-6 overflow-x-auto">
+                          {renderItemForm(item)}
+                        </CardContent>
+                      </motion.div>
                     )}
-                  </IconButton>
-                  <Typography variant="subtitle1">
-                    {getItemTypeLabel(item.type)}
-                  </Typography>
-                </div>
+                  </AnimatePresence>
+                </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
-                <div className="flex items-center space-x-4">
-                  <Typography variant="body1" fontWeight={600}>
-                    ₹{item.total.toFixed(2)}
-                  </Typography>
-                  <IconButton size="small" color="error" onClick={(e) => {
-                    e.stopPropagation(); // Prevent toggling on remove
-                    handleRemoveItem(item.id);
-                  }}>
-                    <Trash className="h-5 w-5" />
-                  </IconButton>
-                </div>
-              </CardActions>
-
-              {item.isOpen && (
-                <CardContent className="bg-white border-t border-gray-200">
-                  {item.type === "curtain" && (
-                    <CurtainForm
-                      onTotalChange={(total) => updateItemTotal(item.id, total)}
-                    />
-                  )}
-                  {item.type === "blind" && (
-                    <BlindForm
-                      onTotalChange={(total) => updateItemTotal(item.id, total)}
-                    />
-                  )}
-                  {item.type === "sofa" && (
-                    <SofaForm
-                    onTotalChange={(total) => updateItemTotal(item.id, total)}
-                    />
-                  )}
-                  {item.type === "mattress" && (
-                    <MattressForm
-                    onTotalChange={(total) => updateItemTotal(item.id, total)}
-                    />
-                  )}
-                  {/* Add other form components for blind, sofa, and mattress */}
-                </CardContent>
-              )}
-            </Card>
-          ))}
+          {items.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
+              No items added yet. Add an item to create a quotation.
+            </div>
+          )}
         </div>
 
         {items.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="flex justify-between items-center text-lg font-medium text-gray-900">
-              <Typography variant="h6">Total Quotation Amount</Typography>
-              <Typography variant="h6">₹{totalQuotationAmount.toFixed(2)}</Typography>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-6 pt-4 border-t flex justify-between items-center"
+          >
+            <span className="text-lg font-medium">Total Quotation Amount</span>
+            <span className="text-xl font-bold text-primary">
+              ₹{totalQuotationAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+            </span>
+          </motion.div>
         )}
       </div>
     </div>
