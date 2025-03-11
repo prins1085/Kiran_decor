@@ -5,8 +5,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
+  const { logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, setTheme } = useTheme();
   
@@ -48,7 +50,7 @@ const Index = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
                   >
-                    QuotePro
+                    Kiran Decor
                   </motion.h1>
                 </div>
                 <nav className="ml-6 hidden sm:flex space-x-1">
@@ -87,7 +89,7 @@ const Index = () => {
                   <User className="h-5 w-5 text-muted-foreground" />
                 </Button>
                 
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={logout}>
                   <LogOut className="h-5 w-5 text-muted-foreground" />
                 </Button>
               </motion.div>
