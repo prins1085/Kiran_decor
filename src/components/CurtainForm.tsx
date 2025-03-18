@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { roundToNearestQuarter } from "@/utils/roundQuarterNumber";
 
 interface CurtainFormProps {
   onTotalChange: (total: number, details: Record<string, any>) => void;
@@ -27,6 +28,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     meterPerPart: 0,
     totalMeters: 0,
     totalLeather: 0,
+    materialCostAfterDiscount: 0,
     laborCost: 0,
     channelType: initialValues?.channelType || "manual",
     channelFeet: 0,
@@ -35,6 +37,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     dimoutCost: 0,
     sheerMeters: 0,
     sheerCost: 0,
+    panelCost: 0,
   });
 
   const [prices, setPrices] = useState({
@@ -43,14 +46,20 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     channelPerFeet: initialValues?.channelPerFeet || "",
     dimoutPerMeter: initialValues?.dimoutPerMeter || "",
     sheerPerMeter: initialValues?.sheerPerMeter || "",
+    panelMeters: initialValues?.panelMeters || "",
+    panelPerMeter: initialValues?.panelPerMeter || "",
+    materialDiscountPercentage: initialValues?.materialDiscountPercentage || "",
+    motorPrice: initialValues?.motorPrice || "",
+    remotePrice: initialValues?.remotePrice || "",
+    fittingCost: initialValues?.fittingCost || "",
   });
 
   useEffect(() => {
     if (dimensions.width && dimensions.height) {
       const parts = Math.round(Number(dimensions.width) / 20);
       const metersPerPart = (Number(dimensions.height) + 15) / 39;
-      const totalM = parts * metersPerPart;
-      const channelF = Number(dimensions.width) / 12;
+      const totalM = roundToNearestQuarter(parts * metersPerPart);
+      const channelF = roundToNearestQuarter(Number(dimensions.width) / 12);
 
       setCalculations({
         ...calculations,
@@ -67,25 +76,56 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
   useEffect(() => {
     const totalLeather =
       calculations.totalMeters * Number(prices.perMeter || 0);
-    const channelCost =
+    const discountPercentage = Number(prices.materialDiscountPercentage || 0);
+    const materialDiscount = (totalLeather * discountPercentage) / 100;
+    const materialCostAfterDiscount = Math.max(
+      totalLeather - materialDiscount,
+      0
+    );
+
+    const channelFeetCost =
       calculations.channelFeet * Number(prices.channelPerFeet || 0);
+    const motorCost =
+      calculations.channelType === "motorized"
+        ? Number(prices.motorPrice || 0)
+        : 0;
+    const remoteCost =
+      calculations.channelType === "motorized"
+        ? Number(prices.remotePrice || 0)
+        : 0;
+    const fittingCost =
+      calculations.channelType === "motorized"
+        ? Number(prices.fittingCost || 0)
+        : 0;
+
+    const channelCost = channelFeetCost + motorCost + remoteCost + fittingCost;
+
     const dimoutCost =
       calculations.dimoutMeters * Number(prices.dimoutPerMeter || 0);
     const sheerCost =
       calculations.sheerMeters * Number(prices.sheerPerMeter || 0);
+    const panelCost =
+      Number(prices.panelMeters || 0) * Number(prices.panelPerMeter || 0);
     const laborCost = Number(prices.labor || 0);
 
     setCalculations((prev) => ({
       ...prev,
       totalLeather,
+      materialCostAfterDiscount,
       laborCost,
       channelCost,
       dimoutCost,
       sheerCost,
+      panelCost,
     }));
 
     const total =
-      totalLeather + laborCost + channelCost + dimoutCost + sheerCost;
+      materialCostAfterDiscount +
+      laborCost +
+      channelCost +
+      dimoutCost +
+      sheerCost +
+      panelCost;
     const details = {
       width: dimensions.width,
       height: dimensions.height,
@@ -94,7 +134,13 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       channelPerFeet: prices.channelPerFeet,
       dimoutPerMeter: prices.dimoutPerMeter,
       sheerPerMeter: prices.sheerPerMeter,
+      panelMeters: prices.panelMeters,
+      panelPerMeter: prices.panelPerMeter,
       channelType: calculations.channelType,
+      motorPrice: prices.motorPrice,
+      remotePrice: prices.remotePrice,
+      fittingCost: prices.fittingCost,
+      materialDiscountPercentage: prices.materialDiscountPercentage,
     };
 
     onTotalChange(total, details);
@@ -108,7 +154,8 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      {/* ==================== MATERIAL SECTION ================ */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
         <div className="space-y-2">
           <Label htmlFor="curtain-width">Width (inches)</Label>
           <Input
@@ -145,10 +192,26 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
             placeholder="Enter price per meter"
           />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="material-discount">Material Discount (%)</Label>
+          <Input
+            id="material-discount"
+            type="number"
+            value={prices.materialDiscountPercentage}
+            onChange={(e) =>
+              setPrices({
+                ...prices,
+                materialDiscountPercentage: e.target.value,
+              })
+            }
+            placeholder="Enter discount percentage"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {/* <div className="space-y-2">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="space-y-2">
           <Label htmlFor="price-per-meter">Price per Meter</Label>
           <Input
             id="price-per-meter"
@@ -157,67 +220,9 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
             onChange={(e) => setPrices({ ...prices, perMeter: e.target.value })}
             placeholder="Enter price per meter"
           />
-        </div> */}
+        </div>
 
-        {/* <div className="space-y-2">
-          <Label htmlFor="labor-cost">Labour Cost</Label>
-          <Input
-            id="labor-cost"
-            type="number"
-            value={prices.labor}
-            onChange={(e) => setPrices({ ...prices, labor: e.target.value })}
-            placeholder="Enter labor cost"
-          />
-        </div> */}
-      </div>
-
-      <Card className="border border-border/60">
-        <CardContent className="p-4 space-y-4">
-          <h4 className="font-medium text-sm">Channel</h4>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="channel-type">Type</Label>
-              <Select
-                value={calculations.channelType}
-                onValueChange={(value) =>
-                  setCalculations({ ...calculations, channelType: value })
-                }
-              >
-                <SelectTrigger id="channel-type">
-                  <SelectValue placeholder="Select channel type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="manual">Manual</SelectItem>
-                  <SelectItem value="motorized">Motorized</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* <div className="space-y-2">
-              <Label htmlFor="channel-feet">Total Feet</Label>
-              <Input
-                id="channel-feet"
-                type="text"
-                value={calculations.channelFeet.toFixed(2)}
-                readOnly
-                className="bg-muted/50"
-              />
-            </div> */}
-
-            <div className="space-y-2">
-              <Label htmlFor="channel-price">Price per Feet</Label>
-              <Input
-                id="channel-price"
-                type="number"
-                value={prices.channelPerFeet}
-                onChange={(e) =>
-                  setPrices({ ...prices, channelPerFeet: e.target.value })
-                }
-                placeholder="Enter price"
-              />
-            </div>
-            <div className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="labor-cost">Labour Cost</Label>
           <Input
             id="labor-cost"
@@ -227,10 +232,9 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
             placeholder="Enter labor cost"
           />
         </div>
-          </div>
-        </CardContent>
-      </Card>
+      </div> */}
 
+      {/* ============== DIMOUT AND SHEER SECTION ============== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Card className="border border-border/60">
           <CardContent className="p-4 space-y-4">
@@ -297,6 +301,150 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
         </Card>
       </div>
 
+      {/* ============== CHANNEL SECTION ================ */}
+      <Card className="border border-border/60">
+        <CardContent className="p-4 space-y-4">
+          <h4 className="font-medium text-sm">Channel</h4>
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="channel-type">Type</Label>
+              <Select
+                value={calculations.channelType}
+                onValueChange={(value) =>
+                  setCalculations({ ...calculations, channelType: value })
+                }
+              >
+                <SelectTrigger id="channel-type">
+                  <SelectValue placeholder="Select channel type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manual</SelectItem>
+                  <SelectItem value="motorized">Motorized</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="channel-feet">Total Feet</Label>
+              <Input
+                id="channel-feet"
+                type="text"
+                value={calculations.channelFeet.toFixed(2)}
+                readOnly
+                className="bg-muted/50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="channel-price">Price per Feet</Label>
+              <Input
+                id="channel-price"
+                type="number"
+                value={prices.channelPerFeet}
+                onChange={(e) =>
+                  setPrices({ ...prices, channelPerFeet: e.target.value })
+                }
+                placeholder="Enter price"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="labor-cost">Labour Cost</Label>
+              <Input
+                id="labor-cost"
+                type="number"
+                value={prices.labor}
+                onChange={(e) =>
+                  setPrices({ ...prices, labor: e.target.value })
+                }
+                placeholder="Enter labor cost"
+              />
+            </div>
+
+            {calculations.channelType === "motorized" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="motor-price">Motor Price</Label>
+                  <Input
+                    id="motor-price"
+                    type="number"
+                    value={prices.motorPrice}
+                    onChange={(e) =>
+                      setPrices({ ...prices, motorPrice: e.target.value })
+                    }
+                    placeholder="Enter motor price"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="remote-price">Remote Price</Label>
+                  <Input
+                    id="remote-price"
+                    type="number"
+                    value={prices.remotePrice}
+                    onChange={(e) =>
+                      setPrices({ ...prices, remotePrice: e.target.value })
+                    }
+                    placeholder="Enter remote price"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fitting-cost">Fitting Cost</Label>
+                  <Input
+                    id="fitting-cost"
+                    type="number"
+                    value={prices.fittingCost}
+                    onChange={(e) =>
+                      setPrices({ ...prices, fittingCost: e.target.value })
+                    }
+                    placeholder="Enter fitting cost"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ============== PANEL SECTION ============== */}
+      <div className="grid grid-cols-1 sm:grid-cols-1 gap-6">
+        <Card className="border border-border/60">
+          <CardContent className="p-4 space-y-4">
+            <h4 className="font-medium text-sm">Panel</h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="panel-meters">Panel Meters</Label>
+                <Input
+                  id="panel-meters"
+                  type="number"
+                  value={prices.panelMeters}
+                  onChange={(e) =>
+                    setPrices({ ...prices, panelMeters: e.target.value })
+                  }
+                  placeholder="Enter panel meters"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="panel-price">Price per Meter</Label>
+                <Input
+                  id="panel-price"
+                  type="number"
+                  value={prices.panelPerMeter}
+                  onChange={(e) =>
+                    setPrices({ ...prices, panelPerMeter: e.target.value })
+                  }
+                  placeholder="Enter panel price per meter"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ============== COST BREAKDOWN SECTION ============== */}
       <Card className="border-t border-border mt-4 bg-accent/30">
         <CardContent className="p-4">
           <h4 className="font-medium mb-3">Cost Breakdown</h4>
@@ -309,6 +457,35 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 {calculations.totalLeather.toLocaleString("en-IN", {
                   maximumFractionDigits: 2,
                 })}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                Material Discount ({prices.materialDiscountPercentage || 0}%):
+              </span>
+              <span>
+                - ₹
+                {(
+                  (calculations.totalLeather *
+                    Number(prices.materialDiscountPercentage || 0)) /
+                  100
+                ).toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+
+            <div className="flex justify-between font-medium">
+              <span>Material Cost After Discount:</span>
+              <span className="text-primary">
+                ₹
+                {calculations.materialCostAfterDiscount.toLocaleString(
+                  "en-IN",
+                  {
+                    maximumFractionDigits: 2,
+                  }
+                )}
               </span>
             </div>
 
@@ -351,17 +528,27 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 })}
               </span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Panel Cost:</span>
+              <span>
+                ₹
+                {calculations.panelCost.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
 
             <div className="flex justify-between font-medium pt-2 mt-2 border-t">
               <span>Total:</span>
               <span className="text-primary font-semibold">
                 ₹
                 {(
-                  calculations.totalLeather +
+                  calculations.materialCostAfterDiscount +
                   calculations.laborCost +
                   calculations.channelCost +
                   calculations.dimoutCost +
-                  calculations.sheerCost
+                  calculations.sheerCost +
+                  calculations.panelCost
                 ).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
               </span>
             </div>
