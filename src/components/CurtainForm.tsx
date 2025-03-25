@@ -36,7 +36,9 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     dimoutMeters: 0,
     dimoutCost: 0,
     sheerMeters: 0,
+    sheerHeight: initialValues?.sheerHeight || initialValues?.height,
     sheerCost: 0,
+    sheerCostAfterDiscount: 0,
     panelCost: 0,
   });
 
@@ -46,6 +48,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     channelPerFeet: initialValues?.channelPerFeet || "",
     dimoutPerMeter: initialValues?.dimoutPerMeter || "",
     sheerPerMeter: initialValues?.sheerPerMeter || "",
+    sheerDiscountPercentage: initialValues?.sheerDiscountPercentage || "",
     panelMeters: initialValues?.panelMeters || "",
     panelPerMeter: initialValues?.panelPerMeter || "",
     materialDiscountPercentage: initialValues?.materialDiscountPercentage || "",
@@ -61,6 +64,9 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       const totalM = roundToNearestQuarter(parts * metersPerPart);
       const channelF = roundToNearestQuarter(Number(dimensions.width) / 12);
 
+      const SheermetersPerPart = (Number(calculations.sheerHeight) + 15) / 39;
+      const SheertotalM = roundToNearestQuarter(parts * SheermetersPerPart);
+
       setCalculations({
         ...calculations,
         numberOfParts: parts,
@@ -68,10 +74,10 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
         totalMeters: totalM,
         channelFeet: channelF,
         dimoutMeters: totalM,
-        sheerMeters: totalM,
+        sheerMeters: SheertotalM,
       });
     }
-  }, [dimensions]);
+  }, [dimensions, calculations.sheerHeight]);
 
   useEffect(() => {
     const totalLeather =
@@ -102,8 +108,13 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
 
     const dimoutCost =
       calculations.dimoutMeters * Number(prices.dimoutPerMeter || 0);
+
     const sheerCost =
       calculations.sheerMeters * Number(prices.sheerPerMeter || 0);
+    const sheerDiscountPercentage = Number(prices.sheerDiscountPercentage || 0);
+    const sheerDiscount = (sheerCost * sheerDiscountPercentage) / 100;
+    const sheerCostAfterDiscount = Math.max(sheerCost - sheerDiscount, 0);
+
     const panelCost =
       Number(prices.panelMeters || 0) * Number(prices.panelPerMeter || 0);
     const laborCost = Number(prices.labor || 0);
@@ -116,6 +127,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       channelCost,
       dimoutCost,
       sheerCost,
+      sheerCostAfterDiscount,
       panelCost,
     }));
 
@@ -124,7 +136,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       laborCost +
       channelCost +
       dimoutCost +
-      sheerCost +
+      sheerCostAfterDiscount +
       panelCost;
     const details = {
       width: dimensions.width,
@@ -134,6 +146,8 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       channelPerFeet: prices.channelPerFeet,
       dimoutPerMeter: prices.dimoutPerMeter,
       sheerPerMeter: prices.sheerPerMeter,
+      sheerHeight: calculations.sheerHeight,
+      sheerDiscountPercentage: prices.sheerDiscountPercentage,
       panelMeters: prices.panelMeters,
       panelPerMeter: prices.panelPerMeter,
       channelType: calculations.channelType,
@@ -150,12 +164,13 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     calculations.channelFeet,
     calculations.dimoutMeters,
     calculations.sheerMeters,
+    calculations.sheerHeight,
   ]);
 
   return (
     <div className="space-y-6">
       {/* ==================== MATERIAL SECTION ================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-6">
         <div className="space-y-2">
           <Label htmlFor="curtain-width">Width (inches)</Label>
           <Input
@@ -175,10 +190,22 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
             id="curtain-height"
             type="number"
             value={dimensions.height}
-            onChange={(e) =>
-              setDimensions({ ...dimensions, height: e.target.value })
-            }
+            onChange={(e) => {
+              setDimensions({ ...dimensions, height: e.target.value });
+              setCalculations({ ...calculations, sheerHeight: e.target.value });
+            }}
             placeholder="Enter height"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="material-meters">Total Meters</Label>
+          <Input
+            id="material-meters"
+            type="text"
+            value={calculations.totalMeters.toFixed(2)}
+            readOnly
+            className="bg-muted/50"
           />
         </div>
 
@@ -194,7 +221,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="material-discount">Material Discount (%)</Label>
+          <Label htmlFor="material-discount">Discount (%)</Label>
           <Input
             id="material-discount"
             type="number"
@@ -238,7 +265,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Card className="border border-border/60">
           <CardContent className="p-4 space-y-4">
-            <h4 className="font-medium text-sm">Dimout</h4>
+            <h4 className="font-medium text-sm">Dimout Fabric</h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -270,9 +297,9 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
 
         <Card className="border border-border/60">
           <CardContent className="p-4 space-y-4">
-            <h4 className="font-medium text-sm">Sheer</h4>
+            <h4 className="font-medium text-sm">Sheer Fabric</h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="sheer-meters">Total Meters</Label>
                 <Input
@@ -281,6 +308,22 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                   value={calculations.sheerMeters.toFixed(2)}
                   readOnly
                   className="bg-muted/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sheer-height">Height (inches)</Label>
+                <Input
+                  id="sheer-height"
+                  type="number"
+                  value={calculations.sheerHeight}
+                  onChange={(e) =>
+                    setCalculations({
+                      ...calculations,
+                      sheerHeight: e.target.value,
+                    })
+                  }
+                  placeholder="Enter height"
                 />
               </div>
 
@@ -294,6 +337,22 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                     setPrices({ ...prices, sheerPerMeter: e.target.value })
                   }
                   placeholder="Enter price"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sheer-discount">Discount (%)</Label>
+                <Input
+                  id="sheer-discount"
+                  type="number"
+                  value={prices.sheerDiscountPercentage}
+                  onChange={(e) =>
+                    setPrices({
+                      ...prices,
+                      sheerDiscountPercentage: e.target.value,
+                    })
+                  }
+                  placeholder="Enter discount percentage"
                 />
               </div>
             </div>
@@ -451,7 +510,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
 
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Material Cost:</span>
+              <span className="text-muted-foreground">Fabric Cost:</span>
               <span>
                 ₹
                 {calculations.totalLeather.toLocaleString("en-IN", {
@@ -462,7 +521,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
 
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                Material Discount ({prices.materialDiscountPercentage || 0}%):
+                Discount ({prices.materialDiscountPercentage || 0}%):
               </span>
               <span>
                 - ₹
@@ -477,7 +536,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
             </div>
 
             <div className="flex justify-between font-medium">
-              <span>Material Cost After Discount:</span>
+              <span>Fabric Cost After Discount:</span>
               <span className="text-primary">
                 ₹
                 {calculations.materialCostAfterDiscount.toLocaleString(
@@ -494,16 +553,6 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
               <span>
                 ₹
                 {calculations.laborCost.toLocaleString("en-IN", {
-                  maximumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Channel Cost:</span>
-              <span>
-                ₹
-                {calculations.channelCost.toLocaleString("en-IN", {
                   maximumFractionDigits: 2,
                 })}
               </span>
@@ -528,6 +577,43 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 })}
               </span>
             </div>
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                Sheer Discount ({prices.sheerDiscountPercentage || 0}%):
+              </span>
+              <span>
+                - ₹
+                {(
+                  (calculations.sheerCost *
+                    Number(prices.sheerDiscountPercentage || 0)) /
+                  100
+                ).toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+
+            <div className="flex justify-between font-medium">
+              <span>Sheer Cost After Discount:</span>
+              <span className="text-primary">
+                ₹
+                {calculations.sheerCostAfterDiscount.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Channel Cost:</span>
+              <span>
+                ₹
+                {calculations.channelCost.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+
             <div className="flex justify-between">
               <span className="text-muted-foreground">Panel Cost:</span>
               <span>
@@ -547,7 +633,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                   calculations.laborCost +
                   calculations.channelCost +
                   calculations.dimoutCost +
-                  calculations.sheerCost +
+                  calculations.sheerCostAfterDiscount +
                   calculations.panelCost
                 ).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
               </span>
