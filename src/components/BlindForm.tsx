@@ -8,10 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { roundToNearestQuarter } from "@/utils/roundQuarterNumber";
 
 interface BlindFormProps {
   onTotalChange: (total: number, details?: Record<string, any>) => void;
@@ -19,12 +17,14 @@ interface BlindFormProps {
 }
 
 const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
-  const [blindType, setBlindType] = useState(initialValues?.blindType || "roller");
+  const [blindType, setBlindType] = useState(
+    initialValues?.blindType || "roller"
+  );
   const [dimensions, setDimensions] = useState({
     width: initialValues?.dimensions?.width || "",
     height: initialValues?.dimensions?.height || "",
   });
-  
+
   const [calculations, setCalculations] = useState({
     totalSqFeet: 0,
     numberOfParts: 0,
@@ -33,14 +33,17 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
     channelCost: 0,
     fabricCost: 0,
     fittingCost: 0,
+    dimoutMeters: 0,
+    dimoutCost: 0,
     totalCost: 0,
   });
-  
+
   const [prices, setPrices] = useState({
     perSqFeet: initialValues?.prices?.perSqFeet || "",
     perMeter: initialValues?.prices?.perMeter || "",
     channelPerSqFeet: initialValues?.prices?.channelPerSqFeet || "",
     fittingCost: initialValues?.prices?.fittingCost || "",
+    dimoutPerMeter: initialValues?.dimoutPerMeter || "",
   });
 
   useEffect(() => {
@@ -48,7 +51,7 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
       const width = Number(dimensions.width);
       const height = Number(dimensions.height);
       const totalSqFeet = (width * height) / 144;
-      
+
       let updatedCalculations = {
         totalSqFeet,
         numberOfParts: 0,
@@ -57,18 +60,28 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         channelCost: 0,
         fabricCost: 0,
         fittingCost: 0,
+        dimoutMeters: 0,
+        dimoutCost: 0,
         totalCost: 0,
       };
-      
+
       if (blindType === "roller") {
         const fittingCost = Number(prices.fittingCost || 0);
         const fabricCost = totalSqFeet * Number(prices.perSqFeet || 0);
-        const totalCost = fabricCost + fittingCost;
-        
+
+        const parts = width <= 50 ? 1 : Math.ceil(width / 50);
+        const metersPerPart = (height + 15) / 39;
+        const totalMeters = parts * metersPerPart;
+        const dimoutCost = totalMeters * Number(prices.dimoutPerMeter || 0);
+
+        const totalCost = fabricCost + fittingCost + dimoutCost;
+
         updatedCalculations = {
           ...updatedCalculations,
           fabricCost,
           fittingCost,
+          dimoutMeters: totalMeters,
+          dimoutCost,
           totalCost,
         };
       } else if (blindType === "roman") {
@@ -77,10 +90,12 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         const totalMeters = parts * metersPerPart;
         const channelSqFeet = totalSqFeet;
         const fabricCost = totalMeters * Number(prices.perMeter || 0);
-        const channelCost = channelSqFeet * Number(prices.channelPerSqFeet || 0);
+        const channelCost =
+          channelSqFeet * Number(prices.channelPerSqFeet || 0);
         const fittingCost = Number(prices.fittingCost || 0);
-        const totalCost = fabricCost + channelCost + fittingCost;
-        
+        const dimoutCost = totalMeters * Number(prices.dimoutPerMeter || 0);
+        const totalCost = fabricCost + channelCost + fittingCost + dimoutCost;
+
         updatedCalculations = {
           ...updatedCalculations,
           numberOfParts: parts,
@@ -89,17 +104,19 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
           channelCost,
           fabricCost,
           fittingCost,
+          dimoutMeters: totalMeters,
+          dimoutCost,
           totalCost,
         };
       }
-      
+
       setCalculations(updatedCalculations);
-      
+
       onTotalChange(updatedCalculations.totalCost, {
         blindType,
         dimensions,
         prices,
-        calculations: updatedCalculations
+        calculations: updatedCalculations,
       });
     }
   }, [dimensions, blindType, prices, onTotalChange]);
@@ -126,18 +143,22 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
             id="blind-width"
             type="number"
             value={dimensions.width}
-            onChange={(e) => setDimensions({ ...dimensions, width: e.target.value })}
+            onChange={(e) =>
+              setDimensions({ ...dimensions, width: e.target.value })
+            }
             placeholder="Enter width"
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="blind-height">Height (inches)</Label>
           <Input
             id="blind-height"
             type="number"
             value={dimensions.height}
-            onChange={(e) => setDimensions({ ...dimensions, height: e.target.value })}
+            onChange={(e) =>
+              setDimensions({ ...dimensions, height: e.target.value })
+            }
             placeholder="Enter height"
           />
         </div>
@@ -151,11 +172,13 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
               id="price-per-sqft"
               type="number"
               value={prices.perSqFeet}
-              onChange={(e) => setPrices({ ...prices, perSqFeet: e.target.value })}
+              onChange={(e) =>
+                setPrices({ ...prices, perSqFeet: e.target.value })
+              }
               placeholder="Enter price per sq. feet"
             />
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="fitting-cost">Fitting Cost</Label>
@@ -163,11 +186,13 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
                 id="fitting-cost"
                 type="number"
                 value={prices.fittingCost}
-                onChange={(e) => setPrices({ ...prices, fittingCost: e.target.value })}
+                onChange={(e) =>
+                  setPrices({ ...prices, fittingCost: e.target.value })
+                }
                 placeholder="Enter fitting cost"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="total-sqft">Total Sq. Feet</Label>
               <Input
@@ -182,30 +207,44 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="fabric-meters">Total Meters</Label>
+              <Input
+                id="fabric-meters"
+                type="text"
+                value={calculations.totalMeters.toFixed(2)}
+                readOnly
+                className="bg-muted/50"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="leather-price">Fabric Price per Meter</Label>
               <Input
                 id="leather-price"
                 type="number"
                 value={prices.perMeter}
-                onChange={(e) => setPrices({ ...prices, perMeter: e.target.value })}
+                onChange={(e) =>
+                  setPrices({ ...prices, perMeter: e.target.value })
+                }
                 placeholder="Enter price per meter"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="channel-price">Channel Price per Sq. Feet</Label>
               <Input
                 id="channel-price"
                 type="number"
                 value={prices.channelPerSqFeet}
-                onChange={(e) => setPrices({ ...prices, channelPerSqFeet: e.target.value })}
+                onChange={(e) =>
+                  setPrices({ ...prices, channelPerSqFeet: e.target.value })
+                }
                 placeholder="Enter channel price"
               />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="channel-sqft">Channel Sq. Feet</Label>
@@ -217,14 +256,16 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
                 className="bg-muted/50"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="fitting-cost-roman">Fitting Cost</Label>
               <Input
                 id="fitting-cost-roman"
                 type="number"
                 value={prices.fittingCost}
-                onChange={(e) => setPrices({ ...prices, fittingCost: e.target.value })}
+                onChange={(e) =>
+                  setPrices({ ...prices, fittingCost: e.target.value })
+                }
                 placeholder="Enter fitting cost"
               />
             </div>
@@ -232,41 +273,108 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         </div>
       )}
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <Card className="border border-border/60">
+          <CardContent className="p-4 space-y-4">
+            <h4 className="font-medium text-sm">Dimout Fabric</h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="dimout-meters">Total Meters</Label>
+                <Input
+                  id="dimout-meters"
+                  type="text"
+                  value={calculations.dimoutMeters.toFixed(2)}
+                  readOnly
+                  className="bg-muted/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dimout-price">Price per Meter</Label>
+                <Input
+                  id="dimout-price"
+                  type="number"
+                  value={prices.dimoutPerMeter}
+                  onChange={(e) =>
+                    setPrices({ ...prices, dimoutPerMeter: e.target.value })
+                  }
+                  placeholder="Enter price"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="border-t border-border mt-4 bg-accent/30">
         <CardContent className="p-4">
           <h4 className="font-medium mb-3">Total Cost Breakdown</h4>
-          
+
           <div className="space-y-2 text-sm">
             {blindType === "roman" && (
               <>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Fabric Cost:</span>
-                  <span>₹{calculations.fabricCost.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                  <span>
+                    ₹
+                    {calculations.fabricCost.toLocaleString("en-IN", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Channel Cost:</span>
-                  <span>₹{calculations.channelCost.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                  <span>
+                    ₹
+                    {calculations.channelCost.toLocaleString("en-IN", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
                 </div>
               </>
             )}
-            
+
             {blindType === "roller" && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Material Cost:</span>
-                <span>₹{calculations.fabricCost.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                <span>
+                  ₹
+                  {calculations.fabricCost.toLocaleString("en-IN", {
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
               </div>
             )}
-            
+
             <div className="flex justify-between">
               <span className="text-muted-foreground">Fitting Cost:</span>
-              <span>₹{calculations.fittingCost.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+              <span>
+                ₹
+                {calculations.fittingCost.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </span>
             </div>
-            
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Dimout Cost:</span>
+              <span>
+                ₹
+                {calculations.dimoutCost.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+
             <div className="flex justify-between font-medium pt-2 mt-2 border-t">
               <span>Total:</span>
               <span className="text-primary font-semibold">
-                ₹{calculations.totalCost.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                ₹
+                {calculations.totalCost.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </div>
           </div>
