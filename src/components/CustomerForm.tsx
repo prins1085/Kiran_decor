@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useCustomer, Customer } from "@/context/CustomerContext";
@@ -26,7 +25,7 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
   const deepClone = (obj: any): any => {
     if (obj === null || typeof obj !== "object") return obj;
     if (Array.isArray(obj)) return obj.map(deepClone);
-    
+
     const cloned: Record<string, any> = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -44,7 +43,7 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
         phone: editingCustomer.phone,
         architect: editingCustomer.architect,
       });
-      
+
       // Properly clone the items with all details
       if (editingCustomer.quotations && editingCustomer.quotations.length > 0) {
         const items = editingCustomer.quotations[0].items || [];
@@ -58,17 +57,17 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // Ensure all item details are preserved
     const quotationItems = deepClone(quotationData);
-    
+
     // Create a properly structured quotation object with all item details
     const quotation = {
       id: editingCustomer?.quotations?.[0]?.id || Date.now().toString(),
       date: editingCustomer?.quotations?.[0]?.date || new Date().toISOString(),
       items: quotationItems,
     };
-    
+
     if (editingCustomer) {
       updateCustomer(editingCustomer.id, {
         ...editingCustomer,
@@ -81,10 +80,10 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
         id: Date.now().toString(),
         quotations: [quotation],
       };
-      
+
       addCustomer(newCustomer);
     }
-    
+
     onClose();
   };
 
@@ -101,47 +100,56 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
 
       <div className="overflow-y-auto flex-1 p-4 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          <motion.div 
+          <motion.div
             className="space-y-6"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="name">Customer Name</Label>
                 <Input
                   id="name"
                   placeholder="Enter customer name"
                   value={customerData.name}
-                  onChange={(e) => setCustomerData({ ...customerData, name: e.target.value })}
+                  onChange={(e) =>
+                    setCustomerData({ ...customerData, name: e.target.value })
+                  }
                   required
                 />
               </div>
-              
-              <div className="space-y-2">
+
+              <div className="space-y-1">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
                   placeholder="Enter phone number"
                   value={customerData.phone}
-                  onChange={(e) => setCustomerData({ ...customerData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setCustomerData({ ...customerData, phone: e.target.value })
+                  }
                   required
                 />
               </div>
-              
-              <div className="space-y-2">
+
+              <div className="space-y-1">
                 <Label htmlFor="architect">Architect</Label>
                 <Input
                   id="architect"
                   placeholder="Enter architect name (optional)"
                   value={customerData.architect}
-                  onChange={(e) => setCustomerData({ ...customerData, architect: e.target.value })}
+                  onChange={(e) =>
+                    setCustomerData({
+                      ...customerData,
+                      architect: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
 
-            <QuotationForm 
+            <QuotationForm
               initialItems={quotationData}
               onQuotationChange={setQuotationData}
             />

@@ -1,11 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface SofaFormProps {
   onTotalChange: (total: number, details?: Record<string, any>) => void;
@@ -14,25 +10,44 @@ interface SofaFormProps {
 
 const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
   const [sofaSize, setSofaSize] = useState(initialValues?.sofaSize || "");
-  const [designPattern, setDesignPattern] = useState(initialValues?.designPattern || "1.25");
-  const [pricePerFoot, setPricePerFoot] = useState(initialValues?.pricePerFoot || "");
-  const [transportationFee, setTransportationFee] = useState(initialValues?.transportationFee || "");
-  const [leatherMeter, setLeatherMeter] = useState(initialValues?.leatherMeter || "");
-  const [leatherPrice, setLeatherPrice] = useState(initialValues?.leatherPrice || "");
-  const [fabricMeter, setFabricMeter] = useState(initialValues?.fabricMeter || "");
-  const [fabricPrice, setFabricPrice] = useState(initialValues?.fabricPrice || "");
+  const [designPattern, setDesignPattern] = useState(
+    initialValues?.designPattern || "1.25"
+  );
+  const [pricePerFoot, setPricePerFoot] = useState(
+    initialValues?.pricePerFoot || ""
+  );
+  const [transportationFee, setTransportationFee] = useState(
+    initialValues?.transportationFee || ""
+  );
+  const [leatherMeter, setLeatherMeter] = useState(
+    initialValues?.leatherMeter || ""
+  );
+  const [leatherPrice, setLeatherPrice] = useState(
+    initialValues?.leatherPrice || ""
+  );
+  const [fabricMeter, setFabricMeter] = useState(
+    initialValues?.fabricMeter || ""
+  );
+  const [fabricPrice, setFabricPrice] = useState(
+    initialValues?.fabricPrice || ""
+  );
   const [totalCost, setTotalCost] = useState(0);
 
   // Calculate the total whenever any input changes
   useEffect(() => {
     if (sofaSize && pricePerFoot && designPattern) {
       const sizeInFeet = Number(sofaSize) / 12; // Convert inches to feet
-      const materialCost = sizeInFeet * Number(designPattern) * Number(pricePerFoot || 0);
+      const materialCost =
+        sizeInFeet * Number(designPattern) * Number(pricePerFoot || 0);
       const leatherCost = Number(leatherMeter) * Number(leatherPrice || 0);
-    const fabricCost = Number(fabricMeter) * Number(fabricPrice || 0);
-    const calculatedTotal = materialCost + leatherCost + fabricCost + Number(transportationFee || 0);
+      const fabricCost = Number(fabricMeter) * Number(fabricPrice || 0);
+      const calculatedTotal =
+        materialCost +
+        leatherCost +
+        fabricCost +
+        Number(transportationFee || 0);
       setTotalCost(calculatedTotal);
-      
+
       // Pass both the total and the form details to parent
       onTotalChange(calculatedTotal, {
         sofaSize,
@@ -40,10 +55,10 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
         pricePerFoot,
         transportationFee,
         leatherMeter,
-      leatherPrice,
-      fabricMeter,
-      fabricPrice,
-        sizeInFeet
+        leatherPrice,
+        fabricMeter,
+        fabricPrice,
+        sizeInFeet,
       });
     } else {
       setTotalCost(0);
@@ -51,18 +66,25 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
         sofaSize,
         designPattern,
         pricePerFoot,
-        transportationFee
+        transportationFee,
       });
     }
-  }, [sofaSize, designPattern, pricePerFoot, transportationFee, leatherMeter,
+  }, [
+    sofaSize,
+    designPattern,
+    pricePerFoot,
+    transportationFee,
+    leatherMeter,
     leatherPrice,
     fabricMeter,
-    fabricPrice, onTotalChange]);
+    fabricPrice,
+    onTotalChange,
+  ]);
 
   return (
-    <div className="space-y-6 max-w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <div className="space-y-2">
+    <div className="space-y-3 max-w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div className="space-y-1">
           <Label htmlFor="sofa-size">Sofa Size (inches)</Label>
           <Input
             id="sofa-size"
@@ -73,8 +95,8 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
             className="w-full"
           />
         </div>
-        
-        <div className="space-y-2">
+
+        <div className="space-y-1">
           <Label htmlFor="design-pattern">Design Pattern</Label>
           <Input
             id="design-pattern"
@@ -86,10 +108,8 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
             className="w-full"
           />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="price-per-foot">Price per Foot</Label>
           <Input
             id="price-per-foot"
@@ -100,8 +120,8 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
             className="w-full"
           />
         </div>
-        
-        <div className="space-y-2">
+
+        <div className="space-y-1">
           <Label htmlFor="transportation-fee">Transportation Fee</Label>
           <Input
             id="transportation-fee"
@@ -120,23 +140,23 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
             <h4 className="font-medium text-sm">Fabric</h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="fabric-meters">Total Meters</Label>
                 <Input
                   id="fabric-meters"
                   type="text"
-                  value={fabricMeter} 
+                  value={fabricMeter}
                   onChange={(e) => setFabricMeter(e.target.value)}
                   placeholder="Enter Meter"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="fabric-price">Price per Meter</Label>
                 <Input
                   id="fabric-price"
                   type="number"
-                  value={fabricPrice} 
+                  value={fabricPrice}
                   onChange={(e) => setFabricPrice(e.target.value)}
                   placeholder="Enter price"
                 />
@@ -150,38 +170,34 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
             <h4 className="font-medium text-sm">Leather</h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="leather-meters">Total Meters</Label>
                 <Input
                   id="leather-meters"
                   type="text"
-                  value={leatherMeter} 
+                  value={leatherMeter}
                   onChange={(e) => setLeatherMeter(e.target.value)}
                   placeholder="Enter Meter"
                 />
               </div>
 
-             
-
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="leather-price">Price per Meter</Label>
                 <Input
                   id="leather-price"
                   type="number"
-                  value={leatherPrice} 
+                  value={leatherPrice}
                   onChange={(e) => setLeatherPrice(e.target.value)}
                   placeholder="Enter price"
                 />
               </div>
-
-             
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* <div className="grid grid-cols-1 gap-4">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="sofa-feet">Size in Feet</Label>
           <Input
             id="sofa-feet"
@@ -196,35 +212,57 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
       <Card className="border-t border-border mt-4 bg-accent/30 w-full">
         <CardContent className="p-4">
           <h4 className="font-medium mb-3">Cost Breakdown</h4>
-          
+
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Material Cost:</span>
               <span>
-                ₹{((Number(sofaSize) / 12) * Number(designPattern) * Number(pricePerFoot || 0)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                ₹
+                {(
+                  (Number(sofaSize) / 12) *
+                  Number(designPattern) *
+                  Number(pricePerFoot || 0)
+                ).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
               </span>
             </div>
-            
 
             <div className="flex justify-between">
               <span className="text-muted-foreground">Leather Cost:</span>
-              <span>₹{(Number(leatherMeter) * Number(leatherPrice || 0)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+              <span>
+                ₹
+                {(
+                  Number(leatherMeter) * Number(leatherPrice || 0)
+                ).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+              </span>
             </div>
-              
+
             <div className="flex justify-between">
               <span className="text-muted-foreground">Fabric Cost:</span>
-              <span>₹{(Number(fabricMeter) * Number(fabricPrice || 0)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+              <span>
+                ₹
+                {(
+                  Number(fabricMeter) * Number(fabricPrice || 0)
+                ).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+              </span>
             </div>
 
             <div className="flex justify-between">
               <span className="text-muted-foreground">Transportation:</span>
-              <span>₹{Number(transportationFee || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+              <span>
+                ₹
+                {Number(transportationFee || 0).toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </span>
             </div>
-            
+
             <div className="flex justify-between font-medium pt-2 mt-2 border-t">
               <span>Total:</span>
               <span className="text-primary font-semibold">
-                ₹{totalCost.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                ₹
+                {totalCost.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </div>
           </div>

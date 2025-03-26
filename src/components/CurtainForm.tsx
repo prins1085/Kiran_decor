@@ -180,10 +180,10 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* ==================== MATERIAL SECTION ================ */}
       <div className="grid grid-cols-1 sm:grid-cols-5 gap-6">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="curtain-width">Width (inches)</Label>
           <Input
             id="curtain-width"
@@ -196,7 +196,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="curtain-height">Height (inches)</Label>
           <Input
             id="curtain-height"
@@ -210,7 +210,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="material-meters">Total Meters</Label>
           <Input
             id="material-meters"
@@ -221,7 +221,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="price-per-meter">Price per Meter</Label>
           <Input
             id="price-per-meter"
@@ -232,7 +232,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="material-discount">Discount (%)</Label>
           <Input
             id="material-discount"
@@ -250,7 +250,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       </div>
 
       {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="price-per-meter">Price per Meter</Label>
           <Input
             id="price-per-meter"
@@ -261,7 +261,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="labor-cost">Labour Cost</Label>
           <Input
             id="labor-cost"
@@ -280,7 +280,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
             <h4 className="font-medium text-sm">Dimout Fabric</h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="dimout-meters">Total Meters</Label>
                 <Input
                   id="dimout-meters"
@@ -291,7 +291,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="dimout-price">Price per Meter</Label>
                 <Input
                   id="dimout-price"
@@ -312,7 +312,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
             <h4 className="font-medium text-sm">Sheer Fabric</h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="sheer-meters">Total Meters</Label>
                 <Input
                   id="sheer-meters"
@@ -323,7 +323,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="sheer-height">Height (inches)</Label>
                 <Input
                   id="sheer-height"
@@ -339,7 +339,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="sheer-price">Price per Meter</Label>
                 <Input
                   id="sheer-price"
@@ -352,7 +352,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="sheer-discount">Discount (%)</Label>
                 <Input
                   id="sheer-discount"
@@ -378,7 +378,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
           <h4 className="font-medium text-sm">Channel</h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="channel-type">Type</Label>
               <Select
                 value={calculations.channelType}
@@ -396,7 +396,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="channel-feet">Total Feet</Label>
               <Input
                 id="channel-feet"
@@ -407,7 +407,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="channel-price">Price per Feet</Label>
               <Input
                 id="channel-price"
@@ -419,7 +419,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 placeholder="Enter price"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="labor-cost">Labour Cost</Label>
               <Input
                 id="labor-cost"
@@ -434,7 +434,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
 
             {calculations.channelType === "motorized" && (
               <>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label htmlFor="motor-price">Motor Price</Label>
                   <Input
                     id="motor-price"
@@ -447,7 +447,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label htmlFor="remote-price">Remote Price</Label>
                   <Input
                     id="remote-price"
@@ -460,7 +460,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label htmlFor="fitting-cost">Fitting Cost</Label>
                   <Input
                     id="fitting-cost"
@@ -485,7 +485,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
             <h4 className="font-medium text-sm">Panel</h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="panel-meters">Panel Meters</Label>
                 <Input
                   id="panel-meters"
@@ -498,7 +498,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="panel-price">Price per Meter</Label>
                 <Input
                   id="panel-price"
@@ -519,7 +519,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
             <h4 className="font-medium text-sm">Weight Dori</h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="dimout-meters">Total Meters</Label>
                 <Input
                   id="dimout-meters"
@@ -530,7 +530,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="dimout-price">Price per Meter</Label>
                 <Input
                   id="dimout-price"

@@ -139,22 +139,21 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
   }, [dimensions, blindType, prices, onTotalChange]);
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="blind-type">Blind Type</Label>
-        <Select value={blindType} onValueChange={setBlindType}>
-          <SelectTrigger id="blind-type">
-            <SelectValue placeholder="Select blind type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="roller">Roller</SelectItem>
-            <SelectItem value="roman">Roman</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="space-y-2">
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="space-y-1">
+          <Label htmlFor="blind-type">Blind Type</Label>
+          <Select value={blindType} onValueChange={setBlindType}>
+            <SelectTrigger id="blind-type">
+              <SelectValue placeholder="Select blind type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="roller">Roller</SelectItem>
+              <SelectItem value="roman">Roman</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
           <Label htmlFor="blind-width">Width (inches)</Label>
           <Input
             id="blind-width"
@@ -167,7 +166,7 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label htmlFor="blind-height">Height (inches)</Label>
           <Input
             id="blind-height"
@@ -182,35 +181,44 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
       </div>
 
       {blindType === "roller" ? (
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="price-per-sqft">Price per Sq. Feet</Label>
-            <Input
-              id="price-per-sqft"
-              type="number"
-              value={prices.perSqFeet}
-              onChange={(e) =>
-                setPrices({ ...prices, perSqFeet: e.target.value })
-              }
-              placeholder="Enter price per sq. feet"
-            />
-          </div>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+            <div className="space-y-1">
+              <Label htmlFor="total-sqft">Total Sq. Feet</Label>
+              <Input
+                id="total-sqft"
+                type="text"
+                value={calculations.totalSqFeet.toFixed(2)}
+                readOnly
+                className="bg-muted/50"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="price-per-sqft">Price per Sq. Feet</Label>
+              <Input
+                id="price-per-sqft"
+                type="number"
+                value={prices.perSqFeet}
+                onChange={(e) =>
+                  setPrices({ ...prices, perSqFeet: e.target.value })
+                }
+                placeholder="Enter price per sq. feet"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="discount">Discount (%)</Label>
-            <Input
-              id="discount"
-              type="number"
-              value={prices.discountPercentage}
-              onChange={(e) =>
-                setPrices({ ...prices, discountPercentage: e.target.value })
-              }
-              placeholder="Enter discount percentage"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-1">
+              <Label htmlFor="discount">Discount (%)</Label>
+              <Input
+                id="discount"
+                type="number"
+                value={prices.discountPercentage}
+                onChange={(e) =>
+                  setPrices({ ...prices, discountPercentage: e.target.value })
+                }
+                placeholder="Enter discount percentage"
+              />
+            </div>
+            <div className="space-y-1">
               <Label htmlFor="fitting-cost">Fitting Cost</Label>
               <Input
                 id="fitting-cost"
@@ -222,23 +230,12 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
                 placeholder="Enter fitting cost"
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="total-sqft">Total Sq. Feet</Label>
-              <Input
-                id="total-sqft"
-                type="text"
-                value={calculations.totalSqFeet.toFixed(2)}
-                readOnly
-                className="bg-muted/50"
-              />
-            </div>
           </div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="fabric-meters">Total Meters</Label>
               <Input
                 id="fabric-meters"
@@ -248,7 +245,7 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
                 className="bg-muted/50"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="leather-price">Fabric Price per Meter</Label>
               <Input
                 id="leather-price"
@@ -261,7 +258,7 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="discount">Discount (%)</Label>
               <Input
                 id="discount"
@@ -273,8 +270,21 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
                 placeholder="Enter discount percentage"
               />
             </div>
+          </div>
 
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="space-y-1">
+              <Label htmlFor="channel-sqft">Channel Sq. Feet</Label>
+              <Input
+                id="channel-sqft"
+                type="text"
+                value={calculations.channelSqFeet.toFixed(2)}
+                readOnly
+                className="bg-muted/50"
+              />
+            </div>
+
+            <div className="space-y-1">
               <Label htmlFor="channel-price">Channel Price per Sq. Feet</Label>
               <Input
                 id="channel-price"
@@ -286,21 +296,8 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
                 placeholder="Enter channel price"
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="channel-sqft">Channel Sq. Feet</Label>
-              <Input
-                id="channel-sqft"
-                type="text"
-                value={calculations.channelSqFeet.toFixed(2)}
-                readOnly
-                className="bg-muted/50"
-              />
-            </div>
-
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="fitting-cost-roman">Fitting Cost</Label>
               <Input
                 id="fitting-cost-roman"
@@ -322,7 +319,7 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
             <h4 className="font-medium text-sm">Dimout Fabric</h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="dimout-meters">Total Meters</Label>
                 <Input
                   id="dimout-meters"
@@ -333,7 +330,7 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="dimout-price">Price per Meter</Label>
                 <Input
                   id="dimout-price"

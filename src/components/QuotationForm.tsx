@@ -172,7 +172,7 @@ const QuotationForm = ({ initialItems = [], onQuotationChange }: { initialItems?
   }, [updateItemTotal]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="pt-6 border-t">
         <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
           <div className="space-y-2 w-full sm:w-auto sm:min-w-[180px]">
