@@ -40,6 +40,8 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     sheerCost: 0,
     sheerCostAfterDiscount: 0,
     panelCost: 0,
+    weightDoriMeters: 0,
+    weightDoriCost: 0,
   });
 
   const [prices, setPrices] = useState({
@@ -55,6 +57,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     motorPrice: initialValues?.motorPrice || "",
     remotePrice: initialValues?.remotePrice || "",
     fittingCost: initialValues?.fittingCost || "",
+    weightDoriPerMeter: initialValues?.weightDoriPerMeter || "",
   });
 
   useEffect(() => {
@@ -62,6 +65,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       const parts = Math.round(Number(dimensions.width) / 20);
       const metersPerPart = (Number(dimensions.height) + 15) / 39;
       const totalM = roundToNearestQuarter(parts * metersPerPart);
+      const totalWD = roundToNearestQuarter(parts * 1.5);
       const channelF = roundToNearestQuarter(Number(dimensions.width) / 12);
 
       const SheermetersPerPart = (Number(calculations.sheerHeight) + 15) / 39;
@@ -75,6 +79,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
         channelFeet: channelF,
         dimoutMeters: totalM,
         sheerMeters: SheertotalM,
+        weightDoriMeters: totalWD,
       });
     }
   }, [dimensions, calculations.sheerHeight]);
@@ -109,6 +114,9 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     const dimoutCost =
       calculations.dimoutMeters * Number(prices.dimoutPerMeter || 0);
 
+    const weightDoriCost =
+      calculations.weightDoriMeters * Number(prices.weightDoriPerMeter || 0);
+
     const sheerCost =
       calculations.sheerMeters * Number(prices.sheerPerMeter || 0);
     const sheerDiscountPercentage = Number(prices.sheerDiscountPercentage || 0);
@@ -129,6 +137,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       sheerCost,
       sheerCostAfterDiscount,
       panelCost,
+      weightDoriCost,
     }));
 
     const total =
@@ -137,7 +146,8 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       channelCost +
       dimoutCost +
       sheerCostAfterDiscount +
-      panelCost;
+      panelCost +
+      weightDoriCost;
     const details = {
       width: dimensions.width,
       height: dimensions.height,
@@ -155,6 +165,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       remotePrice: prices.remotePrice,
       fittingCost: prices.fittingCost,
       materialDiscountPercentage: prices.materialDiscountPercentage,
+      weightDoriPerMeter: prices.weightDoriPerMeter,
     };
 
     onTotalChange(total, details);
@@ -163,8 +174,9 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
     calculations.totalMeters,
     calculations.channelFeet,
     calculations.dimoutMeters,
+    calculations.dimoutMeters,
     calculations.sheerMeters,
-    calculations.sheerHeight,
+    calculations.weightDoriMeters,
   ]);
 
   return (
@@ -467,7 +479,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       </Card>
 
       {/* ============== PANEL SECTION ============== */}
-      <div className="grid grid-cols-1 sm:grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Card className="border border-border/60">
           <CardContent className="p-4 space-y-4">
             <h4 className="font-medium text-sm">Panel</h4>
@@ -496,6 +508,38 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                     setPrices({ ...prices, panelPerMeter: e.target.value })
                   }
                   placeholder="Enter panel price per meter"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border/60">
+          <CardContent className="p-4 space-y-4">
+            <h4 className="font-medium text-sm">Weight Dori</h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="dimout-meters">Total Meters</Label>
+                <Input
+                  id="dimout-meters"
+                  type="text"
+                  value={calculations.weightDoriMeters.toFixed(2)}
+                  readOnly
+                  className="bg-muted/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dimout-price">Price per Meter</Label>
+                <Input
+                  id="dimout-price"
+                  type="number"
+                  value={prices.weightDoriPerMeter}
+                  onChange={(e) =>
+                    setPrices({ ...prices, weightDoriPerMeter: e.target.value })
+                  }
+                  placeholder="Enter price"
                 />
               </div>
             </div>
@@ -634,7 +678,8 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                   calculations.channelCost +
                   calculations.dimoutCost +
                   calculations.sheerCostAfterDiscount +
-                  calculations.panelCost
+                  calculations.panelCost +
+                  calculations.weightDoriCost
                 ).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
               </span>
             </div>

@@ -36,6 +36,8 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
     dimoutMeters: 0,
     dimoutCost: 0,
     totalCost: 0,
+    discount: 0,
+    discountedTotal: 0,
   });
 
   const [prices, setPrices] = useState({
@@ -44,6 +46,7 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
     channelPerSqFeet: initialValues?.prices?.channelPerSqFeet || "",
     fittingCost: initialValues?.prices?.fittingCost || "",
     dimoutPerMeter: initialValues?.dimoutPerMeter || "",
+    discountPercentage: initialValues?.discountPercentage || "",
   });
 
   useEffect(() => {
@@ -63,6 +66,8 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         dimoutMeters: 0,
         dimoutCost: 0,
         totalCost: 0,
+        discount: 0,
+        discountedTotal: 0,
       };
 
       if (blindType === "roller") {
@@ -75,6 +80,9 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         const dimoutCost = totalMeters * Number(prices.dimoutPerMeter || 0);
 
         const totalCost = fabricCost + fittingCost + dimoutCost;
+        const discount =
+          (totalCost * Number(prices.discountPercentage || 0)) / 100;
+        const discountedTotal = totalCost - discount;
 
         updatedCalculations = {
           ...updatedCalculations,
@@ -83,6 +91,8 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
           dimoutMeters: totalMeters,
           dimoutCost,
           totalCost,
+          discount,
+          discountedTotal,
         };
       } else if (blindType === "roman") {
         const parts = width <= 50 ? 1 : Math.ceil(width / 50);
@@ -90,11 +100,16 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         const totalMeters = parts * metersPerPart;
         const channelSqFeet = totalSqFeet;
         const fabricCost = totalMeters * Number(prices.perMeter || 0);
+        const discount =
+          (fabricCost * Number(prices.discountPercentage || 0)) / 100;
+        const discountedFabricCost = fabricCost - discount;
+
         const channelCost =
           channelSqFeet * Number(prices.channelPerSqFeet || 0);
         const fittingCost = Number(prices.fittingCost || 0);
         const dimoutCost = totalMeters * Number(prices.dimoutPerMeter || 0);
-        const totalCost = fabricCost + channelCost + fittingCost + dimoutCost;
+        const totalCost =
+          discountedFabricCost + channelCost + fittingCost + dimoutCost;
 
         updatedCalculations = {
           ...updatedCalculations,
@@ -107,6 +122,8 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
           dimoutMeters: totalMeters,
           dimoutCost,
           totalCost,
+          discount,
+          discountedTotal: totalCost,
         };
       }
 
@@ -179,6 +196,19 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="discount">Discount (%)</Label>
+            <Input
+              id="discount"
+              type="number"
+              value={prices.discountPercentage}
+              onChange={(e) =>
+                setPrices({ ...prices, discountPercentage: e.target.value })
+              }
+              placeholder="Enter discount percentage"
+            />
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="fitting-cost">Fitting Cost</Label>
@@ -228,6 +258,19 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
                   setPrices({ ...prices, perMeter: e.target.value })
                 }
                 placeholder="Enter price per meter"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="discount">Discount (%)</Label>
+              <Input
+                id="discount"
+                type="number"
+                value={prices.discountPercentage}
+                onChange={(e) =>
+                  setPrices({ ...prices, discountPercentage: e.target.value })
+                }
+                placeholder="Enter discount percentage"
               />
             </div>
 
@@ -325,6 +368,25 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
                 </div>
 
                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    Discount ({prices.discountPercentage || 0}%):
+                  </span>
+                  <span>- ₹{calculations.discount.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between font-medium">
+                  <span>Fabric Cost After Discount:</span>
+                  <span className="text-primary">
+                    ₹
+                    {(
+                      calculations.fabricCost - calculations.discount
+                    ).toLocaleString("en-IN", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">Channel Cost:</span>
                   <span>
                     ₹
@@ -368,11 +430,32 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
               </span>
             </div>
 
+            {blindType === "roller" && (
+              <>
+                <div className="flex justify-between font-medium pt-2 mt-2 border-t">
+                  <span>Total:</span>
+                  <span className="text-primary font-semibold">
+                    ₹
+                    {calculations.totalCost.toLocaleString("en-IN", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    Discount ({prices.discountPercentage || 0}%):
+                  </span>
+                  <span>- ₹{calculations.discount.toFixed(2)}</span>
+                </div>
+              </>
+            )}
+
             <div className="flex justify-between font-medium pt-2 mt-2 border-t">
-              <span>Total:</span>
+              <span>Final Total:</span>
               <span className="text-primary font-semibold">
                 ₹
-                {calculations.totalCost.toLocaleString("en-IN", {
+                {calculations.discountedTotal.toLocaleString("en-IN", {
                   maximumFractionDigits: 2,
                 })}
               </span>

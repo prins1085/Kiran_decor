@@ -26,6 +26,7 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
   const [displayHeight, setDisplayHeight] = useState(initialValues?.displayHeight || "");
   const [pricePerUnit, setPricePerUnit] = useState(initialValues?.pricePerUnit || "");
   const [transportationFee, setTransportationFee] = useState(initialValues?.transportationFee || "");
+  const [discountPercentage, setDiscountPercentage] = useState(initialValues?.discountPercentage || "");
   const [totalCost, setTotalCost] = useState(0);
 
   useEffect(() => {
@@ -36,7 +37,12 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
       } else if (company === "kingkoil") {
         area = (Number(width) * Number(height)) / 144; // Convert to sq.ft
       }
-      const calculatedTotal = area * Number(pricePerUnit) + Number(transportationFee || 0);
+
+      const materialCost = area * Number(pricePerUnit);
+      const discountAmount = (materialCost * Number(discountPercentage || 0)) / 100;
+      const discountedMaterialCost = materialCost - discountAmount;
+
+      const calculatedTotal = discountedMaterialCost + Number(transportationFee || 0);
       setTotalCost(calculatedTotal);
       
       // Pass both the total and the form details to parent
@@ -47,7 +53,11 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
         displayHeight,
         pricePerUnit,
         transportationFee,
-        area
+        discountPercentage,
+        area,
+        materialCost,
+        discountAmount,
+        discountedMaterialCost
       });
     } else {
       setTotalCost(0);
@@ -57,10 +67,11 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
         height,
         displayHeight,
         pricePerUnit,
-        transportationFee
+        transportationFee,
+        discountPercentage
       });
     }
-  }, [company, width, height, displayHeight, pricePerUnit, transportationFee, onTotalChange]);
+  }, [company, width, height, displayHeight, pricePerUnit, transportationFee, discountPercentage, onTotalChange]);
 
   return (
     <div className="space-y-6 max-w-full">
@@ -129,6 +140,16 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
             className="w-full"
           />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="material-discount">Discount (%)</Label>
+          <Input
+            id="material-discount"
+            type="number"
+            value={discountPercentage} onChange={(e) => setDiscountPercentage(e.target.value)}
+            placeholder="Enter discount percentage"
+          />
+        </div>
         
         <div className="space-y-2">
           <Label htmlFor="transportation-fee">Transportation Fee</Label>
@@ -169,9 +190,19 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Material Cost:</span>
-              <span>
-                ₹{(totalCost - Number(transportationFee || 0)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+              <span>₹{(Number(pricePerUnit) * (Number(width) * Number(height) / (company === "sleepwell" ? 1550.5 : 144))).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                Discount ({discountPercentage || 0}%):
               </span>
+              <span>-₹{((Number(pricePerUnit) * (Number(width) * Number(height) / (company === "sleepwell" ? 1550.5 : 144))) * Number(discountPercentage || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+            </div>
+
+            <div className="flex justify-between font-medium">
+              <span>Material Cost After Discount:</span>
+              <span className="text-primary">₹{(totalCost - Number(transportationFee || 0)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
             </div>
             
             <div className="flex justify-between">

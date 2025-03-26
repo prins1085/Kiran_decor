@@ -17,14 +17,20 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
   const [designPattern, setDesignPattern] = useState(initialValues?.designPattern || "1.25");
   const [pricePerFoot, setPricePerFoot] = useState(initialValues?.pricePerFoot || "");
   const [transportationFee, setTransportationFee] = useState(initialValues?.transportationFee || "");
+  const [leatherMeter, setLeatherMeter] = useState(initialValues?.leatherMeter || "");
+  const [leatherPrice, setLeatherPrice] = useState(initialValues?.leatherPrice || "");
+  const [fabricMeter, setFabricMeter] = useState(initialValues?.fabricMeter || "");
+  const [fabricPrice, setFabricPrice] = useState(initialValues?.fabricPrice || "");
   const [totalCost, setTotalCost] = useState(0);
 
   // Calculate the total whenever any input changes
   useEffect(() => {
     if (sofaSize && pricePerFoot && designPattern) {
       const sizeInFeet = Number(sofaSize) / 12; // Convert inches to feet
-      const calculatedTotal =
-        sizeInFeet * Number(designPattern) * Number(pricePerFoot) + Number(transportationFee || 0);
+      const materialCost = sizeInFeet * Number(designPattern) * Number(pricePerFoot || 0);
+      const leatherCost = Number(leatherMeter) * Number(leatherPrice || 0);
+    const fabricCost = Number(fabricMeter) * Number(fabricPrice || 0);
+    const calculatedTotal = materialCost + leatherCost + fabricCost + Number(transportationFee || 0);
       setTotalCost(calculatedTotal);
       
       // Pass both the total and the form details to parent
@@ -33,6 +39,10 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
         designPattern,
         pricePerFoot,
         transportationFee,
+        leatherMeter,
+      leatherPrice,
+      fabricMeter,
+      fabricPrice,
         sizeInFeet
       });
     } else {
@@ -44,7 +54,10 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
         transportationFee
       });
     }
-  }, [sofaSize, designPattern, pricePerFoot, transportationFee, onTotalChange]);
+  }, [sofaSize, designPattern, pricePerFoot, transportationFee, leatherMeter,
+    leatherPrice,
+    fabricMeter,
+    fabricPrice, onTotalChange]);
 
   return (
     <div className="space-y-6 max-w-full">
@@ -101,6 +114,72 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <Card className="border border-border/60">
+          <CardContent className="p-4 space-y-4">
+            <h4 className="font-medium text-sm">Fabric</h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="fabric-meters">Total Meters</Label>
+                <Input
+                  id="fabric-meters"
+                  type="text"
+                  value={fabricMeter} 
+                  onChange={(e) => setFabricMeter(e.target.value)}
+                  placeholder="Enter Meter"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fabric-price">Price per Meter</Label>
+                <Input
+                  id="fabric-price"
+                  type="number"
+                  value={fabricPrice} 
+                  onChange={(e) => setFabricPrice(e.target.value)}
+                  placeholder="Enter price"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border/60">
+          <CardContent className="p-4 space-y-4">
+            <h4 className="font-medium text-sm">Leather</h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="leather-meters">Total Meters</Label>
+                <Input
+                  id="leather-meters"
+                  type="text"
+                  value={leatherMeter} 
+                  onChange={(e) => setLeatherMeter(e.target.value)}
+                  placeholder="Enter Meter"
+                />
+              </div>
+
+             
+
+              <div className="space-y-2">
+                <Label htmlFor="leather-price">Price per Meter</Label>
+                <Input
+                  id="leather-price"
+                  type="number"
+                  value={leatherPrice} 
+                  onChange={(e) => setLeatherPrice(e.target.value)}
+                  placeholder="Enter price"
+                />
+              </div>
+
+             
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* <div className="grid grid-cols-1 gap-4">
         <div className="space-y-2">
           <Label htmlFor="sofa-feet">Size in Feet</Label>
@@ -126,6 +205,17 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
               </span>
             </div>
             
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Leather Cost:</span>
+              <span>₹{(Number(leatherMeter) * Number(leatherPrice || 0)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+            </div>
+              
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Fabric Cost:</span>
+              <span>₹{(Number(fabricMeter) * Number(fabricPrice || 0)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+            </div>
+
             <div className="flex justify-between">
               <span className="text-muted-foreground">Transportation:</span>
               <span>₹{Number(transportationFee || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
