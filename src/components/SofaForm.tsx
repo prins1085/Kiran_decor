@@ -78,7 +78,7 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
     leatherPrice,
     fabricMeter,
     fabricPrice,
-    onTotalChange,
+    // onTotalChange,
   ]);
 
   return (

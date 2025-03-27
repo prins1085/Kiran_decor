@@ -60,12 +60,53 @@ const CustomerList = () => {
     }, 0);
   };
 
-  const exportToPDF = (customer: Customer) => {
-    generatePDF(customer);
-    toast({
-      title: "PDF Generated",
-      description: `Quotation for ${customer.name} has been generated.`,
+  const exportToPDF = async (customer: Customer) => {
+    const formattedDate = new Date(customer.quotations[0].date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
+
+    const finalJson = {
+      date: formattedDate,
+      customer: {
+        name: customer.name,
+        phone: customer.phone,
+      },
+      executive: "SURESH BHAI",
+      items: customer.quotations[0].items.map((elem) => {
+        const discount = elem.details?.discount || 0;
+        return {
+            description: `${elem.name} (${elem.type})`,
+            total: (elem.total - discount).toFixed(0),  
+            discount: discount.toFixed(0),
+            total_amount: Number(elem.total.toFixed(0)),
+        };
+    }),
+    };
+
+  await fetch("http://192.168.29.138:9090/RPT/invoice", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(finalJson),
+  })
+    .then(response => response.blob()) 
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+  
+      const customerName = finalJson.customer.name.replace(/\s+/g, "_");
+      a.download = `${customerName}_Quotation.pdf`;
+  
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url); 
+    })
+    .catch(error => console.error("Error downloading the file:", error));
   };
 
   const shareOnWhatsApp = (customer: Customer) => {
@@ -161,7 +202,7 @@ const CustomerList = () => {
                       <TableHead className="font-medium">Name</TableHead>
                       <TableHead className="font-medium">Phone</TableHead>
                       <TableHead className="font-medium hidden md:table-cell">Architect</TableHead>
-                      <TableHead className="font-medium hidden sm:table-cell">Quotations</TableHead>
+                      {/* <TableHead className="font-medium hidden sm:table-cell">Quotations</TableHead> */}
                       <TableHead className="font-medium text-right">Total Amount</TableHead>
                       <TableHead className="font-medium text-right">Actions</TableHead>
                     </TableRow>
@@ -179,7 +220,7 @@ const CustomerList = () => {
                           <TableCell className="font-medium">{customer.name}</TableCell>
                           <TableCell>{customer.phone}</TableCell>
                           <TableCell className="hidden md:table-cell">{customer.architect || "—"}</TableCell>
-                          <TableCell className="hidden sm:table-cell">{customer.quotations.length}</TableCell>
+                          {/* <TableCell className="hidden sm:table-cell">{customer.quotations.length}</TableCell> */}
                           <TableCell className="text-right font-medium">
                             ₹{calculateTotalQuotation(customer).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                           </TableCell>
@@ -299,10 +340,10 @@ const CustomerList = () => {
                               <span className="truncate max-w-[120px] sm:max-w-[140px]">{customer.architect}</span>
                             </div>
                           )}
-                          <div className="flex justify-between text-sm">
+                          {/* <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Quotations:</span>
                             <span className="font-medium">{customer.quotations.length}</span>
-                          </div>
+                          </div> */}
                         </div>
                         
                         <div className="flex justify-between items-center pt-3 border-t">

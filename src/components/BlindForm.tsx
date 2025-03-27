@@ -45,8 +45,8 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
     perMeter: initialValues?.prices?.perMeter || "",
     channelPerSqFeet: initialValues?.prices?.channelPerSqFeet || "",
     fittingCost: initialValues?.prices?.fittingCost || "",
-    dimoutPerMeter: initialValues?.dimoutPerMeter || "",
-    discountPercentage: initialValues?.discountPercentage || "",
+    dimoutPerMeter: initialValues?.prices?.dimoutPerMeter || "",
+    discountPercentage: initialValues?.prices?.discountPercentage || "",
   });
 
   useEffect(() => {
@@ -133,10 +133,11 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         blindType,
         dimensions,
         prices,
+        discount: updatedCalculations.discount,
         calculations: updatedCalculations,
       });
     }
-  }, [dimensions, blindType, prices, onTotalChange]);
+  }, [dimensions, blindType, prices]);
 
   return (
     <div className="space-y-3">

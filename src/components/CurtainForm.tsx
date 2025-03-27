@@ -166,6 +166,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       fittingCost: prices.fittingCost,
       materialDiscountPercentage: prices.materialDiscountPercentage,
       weightDoriPerMeter: prices.weightDoriPerMeter,
+      discount: materialDiscount + sheerDiscount
     };
 
     onTotalChange(total, details);
