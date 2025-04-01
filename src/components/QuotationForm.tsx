@@ -99,20 +99,14 @@ const QuotationForm = ({ initialItems = [], onQuotationChange }: { initialItems?
     }
   }, [items, onQuotationChange]);
 
-  const toggleItem = useCallback((id: number) => {
-    setItems((prevItems) => {
-      const updatedItems = prevItems.map((item) =>
+  const toggleItem = (id: number) => {
+    setItems((prevItems) =>
+      prevItems.map((item) =>
         item.id === id ? { ...item, isOpen: !item.isOpen } : item
-      );
-      
-      if (onQuotationChange) {
-        onQuotationChange(updatedItems);
-      }
-      
-      return updatedItems;
-    });
-  }, [onQuotationChange]);
-
+      )
+    );
+  };
+  
   const updateItemTotal = useCallback((id: number, total: number, details?: Record<string, any>) => {
     setItems((prevItems) => {
       // Create a deep clone of the previous items to ensure all nested properties are preserved

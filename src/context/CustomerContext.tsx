@@ -115,7 +115,22 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({ children }) 
     }
   }, [customers, loading]);
 
+  const transformLocalStorageToApi = (customer: Customer) => ({
+    name: customer.name,
+    phone: customer.phone,
+    architect: customer.architect,
+    curtain: customer.quotations.flatMap(q => q.items.filter(i => i.type === "curtain")),
+    blind: customer.quotations.flatMap(q => q.items.filter(i => i.type === "blind")),
+    mattress: customer.quotations.flatMap(q => q.items.filter(i => i.type === "mattress")),
+    sofa: customer.quotations.flatMap(q => q.items.filter(i => i.type === "sofa"))
+  });
+
+
   const addCustomer = (customer: Customer) => {
+    const formattedData = transformLocalStorageToApi(customer);
+    console.log(formattedData, "customer:::")
+
+  
     // Ensure all details are preserved during add
     const deepClone = (obj: any): any => {
       if (obj === null || typeof obj !== "object") return obj;
@@ -141,6 +156,9 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({ children }) 
   };
 
   const updateCustomer = (id: string, updatedCustomer: Customer) => {
+    const formattedData = transformLocalStorageToApi(updatedCustomer);
+    console.log(formattedData, "customer:::")
+
     // Deep clone to ensure all nested properties are preserved
     const deepClone = (obj: any): any => {
       if (obj === null || typeof obj !== "object") return obj;

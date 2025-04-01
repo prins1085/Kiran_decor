@@ -383,9 +383,18 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
               <Label htmlFor="channel-type">Type</Label>
               <Select
                 value={calculations.channelType}
-                onValueChange={(value) =>
-                  setCalculations({ ...calculations, channelType: value })
-                }
+                onValueChange={(value) => {
+                  if (value === "manual") {
+                    // Reset motor-related fields when switching to manual
+                    setPrices((prevPrices) => ({
+                      ...prevPrices,
+                      motorPrice: "",
+                      remotePrice: "",
+                      fittingCost: "",
+                    }));
+                  }
+                  setCalculations({ ...calculations, channelType: value });
+                }}
               >
                 <SelectTrigger id="channel-type">
                   <SelectValue placeholder="Select channel type" />
