@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,9 @@ import { CustomerProvider } from "@/context/CustomerContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import MattressMaster from "./pages/MattressMaster";
+import { MattressProvider } from "./context/MattressContext";
+import Layout from "./components/Layout";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,14 +24,19 @@ const App = () => (
     <ThemeProvider defaultTheme="light" storageKey="quote-pro-theme">
       <TooltipProvider>
         <CustomerProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <MattressProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Layout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/mattress-master" element={<MattressMaster />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+                </Layout>
+            </BrowserRouter>
+          </MattressProvider>
         </CustomerProvider>
       </TooltipProvider>
     </ThemeProvider>
