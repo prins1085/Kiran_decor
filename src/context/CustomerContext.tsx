@@ -1,6 +1,12 @@
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { toast } from "@/hooks/use-toast";
+import axios from "axios";
 
 export interface QuotationItem {
   id: number;
@@ -30,6 +36,7 @@ interface CustomerContextType {
   addCustomer: (customer: Customer) => void;
   updateCustomer: (id: string, updatedCustomer: Customer) => void;
   deleteCustomer: (id: string) => void;
+  getCustomerById: (id: string) => Promise<Customer | null>; // New method
   loading: boolean;
 }
 
@@ -39,166 +46,215 @@ interface CustomerProviderProps {
   children: ReactNode;
 }
 
-export const CustomerProvider: React.FC<CustomerProviderProps> = ({ children }) => {
+export const CustomerProvider: React.FC<CustomerProviderProps> = ({
+  children,
+}) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load data from localStorage
-  useEffect(() => {
-    try {
-      const savedCustomers = localStorage.getItem("customers");
-      if (savedCustomers) {
-        const parsedCustomers = JSON.parse(savedCustomers);
-        
-        // Ensure all items have a details property
-        const customersWithDetails = parsedCustomers.map((customer: Customer) => {
-          if (customer.quotations && customer.quotations.length > 0) {
-            const updatedQuotations = customer.quotations.map(quotation => {
-              const updatedItems = quotation.items.map(item => ({
-                ...item,
-                details: item.details || {}
-              }));
-              return { ...quotation, items: updatedItems };
-            });
-            return { ...customer, quotations: updatedQuotations };
-          }
-          return customer;
-        });
-        
-        setCustomers(customersWithDetails);
-        console.log("Loaded customers from localStorage:", customersWithDetails);
-      } else {
-        setCustomers([]);
-        console.log("No customers found in localStorage");
-      }
-    } catch (error) {
-      console.error("Failed to load customers from localStorage:", error);
-      toast({
-        title: "Error loading data",
-        description: "Failed to load your customers. Please try refreshing the page.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    if (!loading) {
-      try {
-        // Deep clone customers to preserve all nested properties
-        const deepClone = (obj: any): any => {
-          if (obj === null || typeof obj !== "object") return obj;
-          if (Array.isArray(obj)) return obj.map(deepClone);
-          
-          const cloned: Record<string, any> = {};
-          for (const key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-              cloned[key] = deepClone(obj[key]);
-            }
-          }
-          return cloned;
-        };
-        
-        const customersToSave = deepClone(customers);
-        localStorage.setItem("customers", JSON.stringify(customersToSave));
-        console.log("Saved customers to localStorage:", customersToSave);
-      } catch (error) {
-        console.error("Failed to save customers to localStorage:", error);
-        toast({
-          title: "Error saving data",
-          description: "Failed to save your changes. Please check your browser storage settings.",
-          variant: "destructive"
-        });
-      }
-    }
-  }, [customers, loading]);
-
+  // **🔹 Convert LocalStorage Data to API Format for Storing**
   const transformLocalStorageToApi = (customer: Customer) => ({
-    name: customer.name,
-    phone: customer.phone,
-    architect: customer.architect,
-    curtain: customer.quotations.flatMap(q => q.items.filter(i => i.type === "curtain")),
-    blind: customer.quotations.flatMap(q => q.items.filter(i => i.type === "blind")),
-    mattress: customer.quotations.flatMap(q => q.items.filter(i => i.type === "mattress")),
-    sofa: customer.quotations.flatMap(q => q.items.filter(i => i.type === "sofa"))
+    customer_name: customer.name,
+    cmobilenumber: customer.phone,
+    architectname: customer.architect,
+    curtains: customer.quotations.flatMap((q) =>
+      q.items
+        .filter((i) => i.type === "curtain")
+        .map(({ details, ...rest }) => ({ ...rest, ...details }))
+    ),
+    blinds: customer.quotations.flatMap((q) =>
+      q.items
+        .filter((i) => i.type === "blind")
+        .map(({ details, ...rest }) => ({ ...rest, ...details }))
+    ),
+    mattresses: customer.quotations.flatMap((q) =>
+      q.items
+        .filter((i) => i.type === "mattress")
+        .map(({ details, ...rest }) => ({ ...rest, ...details }))
+    ),
+    sofas: customer.quotations.flatMap((q) =>
+      q.items
+        .filter((i) => i.type === "sofa")
+        .map(({ details, ...rest }) => ({ ...rest, ...details }))
+    ),
   });
 
+  // **🔹 Convert API Format Data Back to Original Format**
+  const transformApiToLocalStorage = (apiData: any): Customer => ({
+    id: apiData.data[0].customer_id, // Ensure unique ID
+    name: apiData.data[0].customer_name,
+    phone: apiData.data[0].mobile_number,
+    architect: apiData.data[0].architect_name,
+    quotations: [
+      {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        items: [
+          ...apiData.curtains.map(({ name, total, ...rest }: any) => ({
+            id: crypto.randomUUID(),
+            type: "curtain",
+            name: name || "",
+            isOpen: false,
+            total: total || 0,
+            details: rest,
+          })),
+          ...apiData.blinds.map(({ name, total, ...rest }: any) => ({
+            id: crypto.randomUUID(),
+            type: "blind",
+            name: name || "",
+            isOpen: false,
+            total: total || 0,
+            details: rest,
+          })),
+          ...apiData.mattresses.map(({ name, total, ...rest }: any) => ({
+            id: crypto.randomUUID(),
+            type: "mattress",
+            name: name || "",
+            isOpen: false,
+            total: total || 0,
+            details: rest,
+          })),
+          ...apiData.sofas.map(({ name, total, ...rest }: any) => ({
+            id: crypto.randomUUID(),
+            type: "sofa",
+            name: name || "",
+            isOpen: false,
+            total: total || 0,
+            details: rest,
+          })),
+        ],
+      },
+    ],
+  });
 
-  const addCustomer = (customer: Customer) => {
-    const formattedData = transformLocalStorageToApi(customer);
-    console.log(formattedData, "customer:::")
+  const SAVE_API =
+    `${import.meta.env.VITE_PROXY}/QUOTEPRO/quation/save`;
+  const GET_ALL_API =
+    `${import.meta.env.VITE_PROXY}/QUOTEPRO/quation/grid`;
+  const GET_SINGLE_API =
+    `${import.meta.env.VITE_PROXY}/QUOTEPRO/quation/getdata`;
+  const DELETE_API =
+    `${import.meta.env.VITE_PROXY}/QUOTEPRO/quation/delete`;
 
-  
-    // Ensure all details are preserved during add
-    const deepClone = (obj: any): any => {
-      if (obj === null || typeof obj !== "object") return obj;
-      if (Array.isArray(obj)) return obj.map(deepClone);
-      
-      const cloned: Record<string, any> = {};
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          cloned[key] = deepClone(obj[key]);
-        }
-      }
-      return cloned;
-    };
-    
-    const customerWithDetails = deepClone(customer);
-    setCustomers(prev => [...prev, customerWithDetails]);
-    console.log("Added customer:", customerWithDetails);
-    
-    toast({
-      title: "Customer added",
-      description: `${customer.name} has been added successfully.`,
-    });
+  // Fetch all customers on component mount
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get(GET_ALL_API);
+
+      const fetchedCustomers = response.data.map((apiData: any) => ({
+        id: apiData.customer_id,
+        name: apiData.customer_name,
+        phone: apiData.mobile_number,
+        architect: apiData.architect_name,
+        quotations: [],
+      }));
+      setCustomers(fetchedCustomers);
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+      toast({
+        title: "Error loading data",
+        description: "Failed to load customers. Please refresh the page.",
+        variant: "destructive",
+      });
+    }
+  };
+  useEffect(() => {
+    fetchCustomers();
+    setLoading(false);
+  }, []);
+
+  // Fetch a single customer by ID
+  const getCustomerById = async (id: string): Promise<Customer | null> => {
+    try {
+      const response = await axios.get(`${GET_SINGLE_API}?customer_id=${id}`);
+      const customer = transformApiToLocalStorage(response.data);
+      return customer;
+    } catch (error) {
+      console.error("Failed to fetch customer details:", error);
+      toast({
+        title: "Error loading customer",
+        description: "Failed to load customer details. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
   };
 
-  const updateCustomer = (id: string, updatedCustomer: Customer) => {
-    const formattedData = transformLocalStorageToApi(updatedCustomer);
-    console.log(formattedData, "customer:::")
+  // Save customer to API
+  const saveCustomer = async (customer: Customer, id?: string) => {
+    try {
+      const formattedCustomer = transformLocalStorageToApi(customer);
+      console.log(formattedCustomer, "formattedCustomer");
 
-    // Deep clone to ensure all nested properties are preserved
-    const deepClone = (obj: any): any => {
-      if (obj === null || typeof obj !== "object") return obj;
-      if (Array.isArray(obj)) return obj.map(deepClone);
-      
-      const cloned: Record<string, any> = {};
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          cloned[key] = deepClone(obj[key]);
-        }
+      // Include the customer ID only during updates
+      const payload = id
+        ? { ...formattedCustomer, customerid: id }
+        : formattedCustomer;
+
+      const response = await axios.post(SAVE_API, payload);
+      console.log(response, "res");
+      // Check if the response contains a success message
+      if (response.data.iserror === "N") {
+        await fetchCustomers();
+
+        toast({
+          title: id ? "Customer updated" : "Customer added",
+          description: `${customer.name} has been ${
+            id ? "updated" : "added"
+          } successfully.`,
+        });
+      } else {
+        throw new Error("Unexpected API response");
       }
-      return cloned;
-    };
-    
-    const customerWithDetails = deepClone(updatedCustomer);
-    
-    setCustomers(prev => prev.map(c => c.id === id ? customerWithDetails : c));
-    console.log("Updated customer:", customerWithDetails);
-    
-    toast({
-      title: "Customer updated",
-      description: `${updatedCustomer.name}'s information has been updated.`,
-    });
+    } catch (error) {
+      console.error("Failed to save customer:", error);
+      toast({
+        title: "Error saving data",
+        description: "Failed to save your changes.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const deleteCustomer = (id: string) => {
-    const customerToDelete = customers.find(c => c.id === id);
-    setCustomers(prev => prev.filter(c => c.id !== id));
-    
-    if (customerToDelete) {
-      console.log("Deleted customer:", customerToDelete);
+  // Add or update customer
+  const addCustomer = (customer: Customer) => saveCustomer(customer); // Add operation (no ID)
+
+  const updateCustomer = (id: string, updatedCustomer: Customer) =>
+    saveCustomer(updatedCustomer, id); // Update operation (with ID)
+
+  // Delete customer
+  const deleteCustomer = async (id: string) => {
+    try {
+      await axios.get(`${DELETE_API}?customer_id=${id}`);
+
+      // Fetch updated data from the API
+      await fetchCustomers();
+
       toast({
         title: "Customer deleted",
-        description: `${customerToDelete.name} has been removed.`,
+        description: `Customer with ID ${id} has been removed.`,
+      });
+    } catch (error) {
+      console.error("Failed to delete customer:", error);
+      toast({
+        title: "Error deleting data",
+        description: "Failed to delete the customer.",
+        variant: "destructive",
       });
     }
   };
 
   return (
-    <CustomerContext.Provider value={{ customers, addCustomer, updateCustomer, deleteCustomer, loading }}>
+    <CustomerContext.Provider
+      value={{
+        customers,
+        addCustomer,
+        updateCustomer,
+        deleteCustomer,
+        getCustomerById,
+        loading,
+      }}
+    >
       {children}
     </CustomerContext.Provider>
   );

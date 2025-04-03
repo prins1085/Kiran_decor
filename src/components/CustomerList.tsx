@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const CustomerList = () => {
-  const { customers, deleteCustomer } = useCustomer();
+  const { customers, deleteCustomer, getCustomerById } = useCustomer();
   const { toast } = useToast();
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -38,9 +38,26 @@ const CustomerList = () => {
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");  // Default to grid view
 
-  const handleEdit = (customer: Customer) => {
-    setEditingCustomer(customer);
-    setShowForm(true);
+  // const handleEdit = (customer: Customer) => {
+  //   setEditingCustomer(customer);
+  //   setShowForm(true);
+  // };
+
+  const handleEdit = async (customer: Customer) => {
+    try {
+      const detailedCustomer = await getCustomerById(customer.id);
+      if (detailedCustomer) {
+        setEditingCustomer(detailedCustomer);
+        setShowForm(true);
+      }
+    } catch (error) {
+      console.error("Failed to fetch customer details for editing:", error);
+      toast({
+        title: "Error loading customer",
+        description: "Failed to load customer details. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDelete = (customer: Customer) => {

@@ -21,8 +21,8 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
     initialValues?.blindType || "roller"
   );
   const [dimensions, setDimensions] = useState({
-    width: initialValues?.dimensions?.width || "",
-    height: initialValues?.dimensions?.height || "",
+    width: initialValues?.width || "",
+    height: initialValues?.height || "",
   });
 
   const [calculations, setCalculations] = useState({
@@ -41,12 +41,12 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
   });
 
   const [prices, setPrices] = useState({
-    perSqFeet: initialValues?.prices?.perSqFeet || "",
-    perMeter: initialValues?.prices?.perMeter || "",
-    channelPerSqFeet: initialValues?.prices?.channelPerSqFeet || "",
-    fittingCost: initialValues?.prices?.fittingCost || "",
-    dimoutPerMeter: initialValues?.prices?.dimoutPerMeter || "",
-    discountPercentage: initialValues?.prices?.discountPercentage || "",
+    perSqFeet: initialValues?.perSqFeet || "",
+    perMeter: initialValues?.perMeter || "",
+    channelPerSqFeet: initialValues?.channelPerSqFeet || "",
+    fittingCost: initialValues?.fittingCost || "",
+    dimoutPerMeter: initialValues?.dimoutPerMeter || "",
+    discountPercentage: initialValues?.discountPercentage || "",
   });
 
   useEffect(() => {
@@ -129,13 +129,30 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
 
       setCalculations(updatedCalculations);
 
-      onTotalChange(updatedCalculations.totalCost, {
+      const details = {
         blindType,
-        dimensions,
-        prices,
+        width: dimensions.width,
+        height: dimensions.height,
+        perSqFeet: prices.perSqFeet,
+        perMeter: prices.perMeter,
+        channelPerSqFeet: prices.channelPerSqFeet,
+        fittingCost: prices.fittingCost,
+        dimoutPerMeter: prices.dimoutPerMeter,
+        discountPercentage: prices.discountPercentage,
+        totalSqFeet: updatedCalculations.totalSqFeet,
+        numberOfParts: updatedCalculations.numberOfParts,
+        totalMeters: updatedCalculations.totalMeters,
+        channelSqFeet: updatedCalculations.channelSqFeet,
+        channelCost: updatedCalculations.channelCost,
+        fabricCost: updatedCalculations.fabricCost,
+        dimoutMeters: updatedCalculations.dimoutMeters,
+        dimoutCost: updatedCalculations.dimoutCost,
+        totalCost: updatedCalculations.totalCost,
         discount: updatedCalculations.discount,
-        calculations: updatedCalculations,
-      });
+        discountedTotal: updatedCalculations.discountedTotal,
+      };
+
+      onTotalChange(updatedCalculations.totalCost, details);
     }
   }, [dimensions, blindType, prices]);
 
