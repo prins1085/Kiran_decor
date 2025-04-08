@@ -150,9 +150,12 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         totalCost: updatedCalculations.totalCost,
         discount: updatedCalculations.discount,
         discountedTotal: updatedCalculations.discountedTotal,
+        beforeDiscountPrice:
+          updatedCalculations.discount + updatedCalculations.discountedTotal,
+        afterDiscountPrice: updatedCalculations.totalCost,
       };
 
-      onTotalChange(updatedCalculations.totalCost, details);
+      onTotalChange(updatedCalculations.discountedTotal, details);
     }
   }, [dimensions, blindType, prices]);
 

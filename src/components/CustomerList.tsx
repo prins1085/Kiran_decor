@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const CustomerList = () => {
-  const { customers, deleteCustomer, getCustomerById } = useCustomer();
+  const { customers, deleteCustomer, getCustomerById, isLoading } = useCustomer();
   const { toast } = useToast();
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -149,9 +149,9 @@ const CustomerList = () => {
   };
 
   const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.name?.toLowerCase().includes(searchQuery?.toLowerCase()) ||
     customer.phone.includes(searchQuery) ||
-    customer.architect.toLowerCase().includes(searchQuery.toLowerCase())
+    customer.architect?.toLowerCase().includes(searchQuery?.toLowerCase())
   );
 
   return (

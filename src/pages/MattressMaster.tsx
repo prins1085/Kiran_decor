@@ -69,9 +69,9 @@ const MattressMaster = () => {
   // Handle search
   const filteredProducts = mattressProducts.filter(
     (product) =>
-      product.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.size.toLowerCase().includes(searchTerm.toLowerCase())
+      product.company?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+      product.productName?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+      product.size?.toLowerCase().includes(searchTerm?.toLowerCase())
   );
 
   // Reset form

@@ -104,6 +104,8 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
         discountAmount,
         discount: discountAmount,
         discountedMaterialCost,
+        beforeDiscountPrice: discountedMaterialCost,
+        afterDiscountPrice: calculatedTotal
       });
     } else {
       setTotalCost(0);
