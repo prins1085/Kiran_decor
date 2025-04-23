@@ -343,7 +343,7 @@ const CustomerList = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              <DropdownMenu>
+                              {/* <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <LoadingButton 
                                     variant="ghost" 
@@ -364,7 +364,7 @@ const CustomerList = () => {
                                     <span>Share on WhatsApp</span>
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
-                              </DropdownMenu>
+                              </DropdownMenu> */}
                               <LoadingButton
                                 variant="ghost"
                                 size="icon"
@@ -421,7 +421,7 @@ const CustomerList = () => {
                             <p className="text-muted-foreground text-sm">{customer.phone}</p>
                           </div>
                           <div className="flex gap-1">
-                            <DropdownMenu>
+                            {/* <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <LoadingButton 
                                   variant="ghost" 
@@ -442,7 +442,7 @@ const CustomerList = () => {
                                   <span>Share on WhatsApp</span>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
-                            </DropdownMenu>
+                            </DropdownMenu> */}
                             <LoadingButton
                               variant="ghost"
                               size="icon"

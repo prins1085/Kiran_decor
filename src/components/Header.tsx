@@ -48,7 +48,7 @@ const Header = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
                 >
-                  QuotePro
+                  Kiran Decor
                 </motion.h1>
               </div>
               <nav className="ml-6 hidden sm:flex space-x-1">
