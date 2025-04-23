@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Plus, Edit2, Trash2, Search, ChevronRight, LayoutGrid, Users, Download, Printer, Share } from "lucide-react";
 import { useCustomer } from "@/context/CustomerContext";
@@ -28,6 +29,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DataLoader, TableLoader } from "@/components/ui/loader";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const CustomerList = () => {
   const { customers, deleteCustomer, getCustomerById, isLoading } = useCustomer();
@@ -37,14 +41,13 @@ const CustomerList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");  // Default to grid view
-
-  // const handleEdit = (customer: Customer) => {
-  //   setEditingCustomer(customer);
-  //   setShowForm(true);
-  // };
+  const [loadingCustomerId, setLoadingCustomerId] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState<string | null>(null);
 
   const handleEdit = async (customer: Customer) => {
     try {
+      setLoadingCustomerId(customer.id);
       const detailedCustomer = await getCustomerById(customer.id);
       if (detailedCustomer) {
         setEditingCustomer(detailedCustomer);
@@ -57,11 +60,14 @@ const CustomerList = () => {
         description: "Failed to load customer details. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoadingCustomerId(null);
     }
   };
 
   const handleDelete = (customer: Customer) => {
     if (confirm(`Are you sure you want to delete ${customer.name}?`)) {
+      setLoadingCustomerId(customer.id);
       deleteCustomer(customer.id);
     }
   };
@@ -78,80 +84,167 @@ const CustomerList = () => {
   };
 
   const exportToPDF = async (customer: Customer) => {
-    const formattedDate = new Date(customer.quotations[0].date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    try {
+      setIsExporting(customer.id);
+      const formattedDate = new Date(customer.quotations[0]?.date || new Date()).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
 
-    const finalJson = {
-      date: formattedDate,
-      customer: {
-        name: customer.name,
-        phone: customer.phone,
-      },
-      executive: "SURESH BHAI",
-      items: customer.quotations[0].items.map((elem) => {
-        const discount = elem.details?.discount || 0;
-        return {
+      const finalJson = {
+        date: formattedDate,
+        customer: {
+          name: customer.name,
+          phone: customer.phone,
+        },
+        executive: "SURESH BHAI",
+        items: customer.quotations[0]?.items.map((elem) => {
+          const discount = elem.details?.discount || 0;
+          return {
             description: `${elem.name} (${elem.type})`,
             total: (elem.total - discount).toFixed(0),  
             discount: discount.toFixed(0),
             total_amount: Number(elem.total.toFixed(0)),
-        };
-    }),
-    };
+          };
+        }) || [],
+      };
 
-  await fetch("http://192.168.29.138:9090/RPT/invoice", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(finalJson),
-  })
-    .then(response => response.blob()) 
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-  
-      const customerName = finalJson.customer.name.replace(/\s+/g, "_");
-      a.download = `${customerName}_Quotation.pdf`;
-  
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url); 
-    })
-    .catch(error => console.error("Error downloading the file:", error));
+      await fetch("http://192.168.29.138:9090/RPT/invoice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(finalJson),
+      })
+        .then(response => response.blob()) 
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+      
+          const customerName = finalJson.customer.name.replace(/\s+/g, "_");
+          a.download = `${customerName}_Quotation.pdf`;
+      
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url); 
+          
+          toast({
+            title: "PDF Generated",
+            description: `Quotation for ${customer.name} has been downloaded.`,
+          });
+        })
+        .catch(error => {
+          console.error("Error downloading the file:", error);
+          toast({
+            title: "Error Generating PDF",
+            description: "Failed to generate PDF. Please try again.",
+            variant: "destructive",
+          });
+        });
+    } finally {
+      setIsExporting(null);
+    }
   };
 
   const shareOnWhatsApp = (customer: Customer) => {
-    // Generate and export PDF
-    const pdfBlob = generatePDF(customer, true);
-    
-    // Format the phone number for WhatsApp API
-    let phoneNumber = customer.phone.replace(/\D/g, '');
-    if (!phoneNumber.startsWith('+')) {
-      phoneNumber = `+91${phoneNumber}`; // Adding India country code as default
+    try {
+      setIsSharing(customer.id);
+      
+      // Format the phone number for WhatsApp API
+      let phoneNumber = customer.phone.replace(/\D/g, '');
+      if (!phoneNumber.startsWith('+')) {
+        phoneNumber = `+91${phoneNumber}`; // Adding India country code as default
+      }
+      
+      // Create message text
+      const message = encodeURIComponent(`Hello ${customer.name}, here's your quotation from QuotePro!`);
+      
+      // Open WhatsApp with the message
+      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+      
+      toast({
+        title: "Opening WhatsApp",
+        description: `Sharing quotation with ${customer.name}.`,
+      });
+    } finally {
+      setIsSharing(null);
     }
-    
-    // Create message text
-    const message = encodeURIComponent(`Hello ${customer.name}, here's your quotation from QuotePro!`);
-    
-    // Open WhatsApp with the message
-    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-    
-    toast({
-      title: "Opening WhatsApp",
-      description: `Sharing quotation with ${customer.name}.`,
-    });
   };
 
   const filteredCustomers = customers.filter(customer => 
     customer.name?.toLowerCase().includes(searchQuery?.toLowerCase()) ||
     customer.phone.includes(searchQuery) ||
     customer.architect?.toLowerCase().includes(searchQuery?.toLowerCase())
+  );
+
+  // Render loading skeleton for the grid view
+  const renderGridSkeleton = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <Card key={i} className="overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-3/4">
+                <Skeleton className="h-5 w-28 mb-2" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="flex gap-1">
+                <Skeleton className="h-8 w-8 rounded-md" />
+                <Skeleton className="h-8 w-8 rounded-md" />
+                <Skeleton className="h-8 w-8 rounded-md" />
+              </div>
+            </div>
+            <div className="space-y-2 mb-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+            <div className="flex justify-between items-center pt-3 border-t">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-5 w-24" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
+  // Render loading skeleton for the list view
+  const renderListSkeleton = () => (
+    <div className="w-full rounded-lg border shadow-sm overflow-hidden bg-card">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="font-medium">Name</TableHead>
+              <TableHead className="font-medium">Phone</TableHead>
+              <TableHead className="font-medium hidden md:table-cell">Architect</TableHead>
+              <TableHead className="font-medium text-right">Total Amount</TableHead>
+              <TableHead className="font-medium text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <TableRow key={i}>
+                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-28" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 
   return (
@@ -203,7 +296,16 @@ const CustomerList = () => {
         </div>
         
         <AnimatePresence mode="wait">
-          {viewMode === "list" ? (
+          {isLoading ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              {viewMode === "list" ? renderListSkeleton() : renderGridSkeleton()}
+            </motion.div>
+          ) : viewMode === "list" ? (
             <motion.div
               key="table-view"
               initial={{ opacity: 0, y: 10 }}
@@ -219,7 +321,6 @@ const CustomerList = () => {
                       <TableHead className="font-medium">Name</TableHead>
                       <TableHead className="font-medium">Phone</TableHead>
                       <TableHead className="font-medium hidden md:table-cell">Architect</TableHead>
-                      {/* <TableHead className="font-medium hidden sm:table-cell">Quotations</TableHead> */}
                       <TableHead className="font-medium text-right">Total Amount</TableHead>
                       <TableHead className="font-medium text-right">Actions</TableHead>
                     </TableRow>
@@ -237,7 +338,6 @@ const CustomerList = () => {
                           <TableCell className="font-medium">{customer.name}</TableCell>
                           <TableCell>{customer.phone}</TableCell>
                           <TableCell className="hidden md:table-cell">{customer.architect || "—"}</TableCell>
-                          {/* <TableCell className="hidden sm:table-cell">{customer.quotations.length}</TableCell> */}
                           <TableCell className="text-right font-medium">
                             ₹{calculateTotalQuotation(customer).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                           </TableCell>
@@ -245,9 +345,14 @@ const CustomerList = () => {
                             <div className="flex justify-end gap-2">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <LoadingButton 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    loading={isExporting === customer.id || isSharing === customer.id}
+                                  >
                                     <Share className="h-4 w-4" />
-                                  </Button>
+                                  </LoadingButton>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => exportToPDF(customer)}>
@@ -260,22 +365,24 @@ const CustomerList = () => {
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
-                              <Button
+                              <LoadingButton
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleEdit(customer)}
                                 className="h-8 w-8"
+                                loading={loadingCustomerId === customer.id}
                               >
                                 <Edit2 className="h-4 w-4" />
-                              </Button>
-                              <Button
+                              </LoadingButton>
+                              <LoadingButton
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleDelete(customer)}
                                 className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                loading={loadingCustomerId === customer.id}
                               >
                                 <Trash2 className="h-4 w-4" />
-                              </Button>
+                              </LoadingButton>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -316,9 +423,14 @@ const CustomerList = () => {
                           <div className="flex gap-1">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <LoadingButton 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8"
+                                  loading={isExporting === customer.id || isSharing === customer.id}
+                                >
                                   <Share className="h-4 w-4" />
-                                </Button>
+                                </LoadingButton>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => exportToPDF(customer)}>
@@ -331,22 +443,24 @@ const CustomerList = () => {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                            <Button
+                            <LoadingButton
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEdit(customer)}
                               className="h-8 w-8"
+                              loading={loadingCustomerId === customer.id}
                             >
                               <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
+                            </LoadingButton>
+                            <LoadingButton
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(customer)}
                               className="h-8 w-8 text-destructive"
+                              loading={loadingCustomerId === customer.id}
                             >
                               <Trash2 className="h-4 w-4" />
-                            </Button>
+                            </LoadingButton>
                           </div>
                         </div>
                         
@@ -357,10 +471,6 @@ const CustomerList = () => {
                               <span className="truncate max-w-[120px] sm:max-w-[140px]">{customer.architect}</span>
                             </div>
                           )}
-                          {/* <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Quotations:</span>
-                            <span className="font-medium">{customer.quotations.length}</span>
-                          </div> */}
                         </div>
                         
                         <div className="flex justify-between items-center pt-3 border-t">

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useCustomer, Customer } from "@/context/CustomerContext";
@@ -6,6 +7,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { ButtonLoader } from "@/components/ui/loader";
 
 interface CustomerFormProps {
   onClose: () => void;
@@ -20,12 +23,13 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
     architect: "",
   });
   const [quotationData, setQuotationData] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Deep clone function to properly clone nested objects
   const deepClone = (obj: any): any => {
     if (obj === null || typeof obj !== "object") return obj;
     if (Array.isArray(obj)) return obj.map(deepClone);
-
+    
     const cloned: Record<string, any> = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -43,7 +47,7 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
         phone: editingCustomer.phone,
         architect: editingCustomer.architect,
       });
-
+      
       // Properly clone the items with all details
       if (editingCustomer.quotations && editingCustomer.quotations.length > 0) {
         const items = editingCustomer.quotations[0].items || [];
@@ -55,36 +59,41 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
     }
   }, [editingCustomer]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // Ensure all item details are preserved
-    const quotationItems = deepClone(quotationData);
-
-    // Create a properly structured quotation object with all item details
-    const quotation = {
-      id: editingCustomer?.quotations?.[0]?.id || Date.now().toString(),
-      date: editingCustomer?.quotations?.[0]?.date || new Date().toISOString(),
-      items: quotationItems,
-    };
-
-    if (editingCustomer) {
-      updateCustomer(editingCustomer.id, {
-        ...editingCustomer,
-        ...customerData,
-        quotations: [quotation],
-      });
-    } else {
-      const newCustomer = {
-        ...customerData,
-        id: Date.now().toString(),
-        quotations: [quotation],
+    setIsSubmitting(true);
+    
+    try {
+      // Ensure all item details are preserved
+      const quotationItems = deepClone(quotationData);
+      
+      // Create a properly structured quotation object with all item details
+      const quotation = {
+        id: editingCustomer?.quotations?.[0]?.id || Date.now().toString(),
+        date: editingCustomer?.quotations?.[0]?.date || new Date().toISOString(),
+        items: quotationItems,
       };
-
-      addCustomer(newCustomer);
+      
+      if (editingCustomer) {
+        await updateCustomer(editingCustomer.id, {
+          ...editingCustomer,
+          ...customerData,
+          quotations: [quotation],
+        });
+      } else {
+        const newCustomer = {
+          ...customerData,
+          id: Date.now().toString(),
+          quotations: [quotation],
+        };
+        
+        await addCustomer(newCustomer);
+      }
+      
+      onClose();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    onClose();
   };
 
   return (
@@ -93,75 +102,77 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
         <h2 className="text-xl sm:text-2xl font-semibold">
           {editingCustomer ? "Edit Customer" : "New Customer"}
         </h2>
-        <Button variant="ghost" size="icon" onClick={onClose}>
+        <Button variant="ghost" size="icon" onClick={onClose} disabled={isSubmitting}>
           <X className="h-6 w-6" />
         </Button>
       </div>
 
       <div className="overflow-y-auto flex-1 p-4 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          <motion.div
+          <motion.div 
             className="space-y-6"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <Label htmlFor="name">Customer Name</Label>
                 <Input
                   id="name"
                   placeholder="Enter customer name"
                   value={customerData.name}
-                  onChange={(e) =>
-                    setCustomerData({ ...customerData, name: e.target.value })
-                  }
+                  onChange={(e) => setCustomerData({ ...customerData, name: e.target.value })}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
-
-              <div className="space-y-1">
+              
+              <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
                   placeholder="Enter phone number"
                   value={customerData.phone}
-                  onChange={(e) =>
-                    setCustomerData({ ...customerData, phone: e.target.value })
-                  }
+                  onChange={(e) => setCustomerData({ ...customerData, phone: e.target.value })}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
-
-              <div className="space-y-1">
+              
+              <div className="space-y-2">
                 <Label htmlFor="architect">Architect</Label>
                 <Input
                   id="architect"
                   placeholder="Enter architect name (optional)"
                   value={customerData.architect}
-                  onChange={(e) =>
-                    setCustomerData({
-                      ...customerData,
-                      architect: e.target.value,
-                    })
-                  }
+                  onChange={(e) => setCustomerData({ ...customerData, architect: e.target.value })}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
 
-            <QuotationForm
+            <QuotationForm 
               initialItems={quotationData}
               onQuotationChange={setQuotationData}
             />
           </motion.div>
 
           <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit">
+            <LoadingButton 
+              type="submit"
+              loading={isSubmitting}
+            >
               {editingCustomer ? "Update Customer" : "Create Customer"}
-            </Button>
+            </LoadingButton>
           </div>
         </form>
       </div>
