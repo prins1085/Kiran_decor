@@ -168,7 +168,7 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
         {/* Size Selection */}
         <div className="space-y-1">
           <Label htmlFor="mattress-size">Size</Label>
-          <Select value={selectedSize} onValueChange={handleSizeChange}>
+          <Select value={Number(selectedSize)} onValueChange={handleSizeChange}>
             <SelectTrigger id="mattress-size" className="w-full">
               <SelectValue placeholder="Select size" />
             </SelectTrigger>
