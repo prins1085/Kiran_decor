@@ -339,7 +339,7 @@ const CustomerList = () => {
                           <TableCell>{customer.phone}</TableCell>
                           <TableCell className="hidden md:table-cell">{customer.architect || "—"}</TableCell>
                           <TableCell className="text-right font-medium">
-                            ₹{calculateTotalQuotation(customer).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                          ₹ {customer.grand_total}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
@@ -476,7 +476,7 @@ const CustomerList = () => {
                         <div className="flex justify-between items-center pt-3 border-t">
                           <span className="text-sm font-medium">Total Amount:</span>
                           <span className="font-semibold text-primary text-sm sm:text-base">
-                            ₹{calculateTotalQuotation(customer).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                            ₹ {customer.grand_total}
                           </span>
                         </div>
                       </CardContent>

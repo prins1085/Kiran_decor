@@ -24,6 +24,7 @@ export interface Customer {
   name: string;
   phone: string;
   architect: string;
+  grand_total?: any;
   quotations: Quotation[];
 }
 
@@ -84,10 +85,10 @@ const transformApiToLocalStorage = (apiData: any): Customer => ({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       items: [
-        ...apiData.curtains.map(({ name, total, ...rest }: any) => ({
+        ...apiData.curtains.map(({ itemname, total, ...rest }: any) => ({
           id: crypto.randomUUID(),
           type: "curtain",
-          name: name || "",
+          name: itemname || "",
           isOpen: false,
           total: total || 0,
           details: rest,
@@ -100,18 +101,18 @@ const transformApiToLocalStorage = (apiData: any): Customer => ({
           total: total || 0,
           details: rest,
         })),
-        ...apiData.mattresses.map(({ name, total, ...rest }: any) => ({
+        ...apiData.mattresses.map(({ itemname, total, ...rest }: any) => ({
           id: crypto.randomUUID(),
           type: "mattress",
-          name: name || "",
+          name: itemname || "",
           isOpen: false,
           total: total || 0,
           details: rest,
         })),
-        ...apiData.sofas.map(({ name, total, ...rest }: any) => ({
+        ...apiData.sofas.map(({ itemname, total, ...rest }: any) => ({
           id: crypto.randomUUID(),
           type: "sofa",
-          name: name || "",
+          name: itemname || "",
           isOpen: false,
           total: total || 0,
           details: rest,
@@ -140,6 +141,7 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({
         name: apiData.customer_name,
         phone: apiData.mobile_number,
         architect: apiData.architect_name,
+        grand_total: apiData.grand_total,
         quotations: [],
       }));
     },
@@ -149,10 +151,11 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({
 
   // Fetch a single customer by ID
   const getCustomerById = async (id: string): Promise<Customer | null> => {
+    console.log("api called")
     try {
       // Check if we have a cached result first
-      const cachedCustomer = queryClient.getQueryData<Customer>(['customer', id]);
-      if (cachedCustomer) return cachedCustomer;
+      // const cachedCustomer = queryClient.getQueryData<Customer>(['customer', id]);
+      // if (cachedCustomer) return cachedCustomer;
 
       const response = await axios.get(`${GET_SINGLE_API}?customer_id=${id}`);
       const customer = transformApiToLocalStorage(response.data);
