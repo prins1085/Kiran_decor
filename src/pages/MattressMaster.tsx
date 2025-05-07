@@ -48,6 +48,9 @@ const MattressMaster = () => {
     updateMattressProduct,
     deleteMattressProduct,
     getMattressProductById,
+    isLoading,
+    isSaving,
+    isDeleting,
   } = useMattress();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -71,7 +74,8 @@ const MattressMaster = () => {
     (product) =>
       product.company?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
       product.productName?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
-      product.size?.toLowerCase().includes(searchTerm?.toLowerCase())
+      String(product.size).includes(String(searchTerm)) || 
+      String(product.price).includes(String(searchTerm))
   );
 
   // Reset form
@@ -102,7 +106,7 @@ const MattressMaster = () => {
   };
 
   // Handle form submission for new product
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newProduct: MattressProduct = {
@@ -112,13 +116,17 @@ const MattressMaster = () => {
       price: parseFloat(formData.price) || 0,
     };
 
-    addMattressProduct(newProduct);
-    resetForm();
-    setIsAddDialogOpen(false);
+    try {
+      await addMattressProduct(newProduct);
+      resetForm();
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to add product:", error);
+    }
   };
 
   // Handle form submission for editing product
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (currentProduct) {
@@ -130,10 +138,14 @@ const MattressMaster = () => {
         price: parseFloat(formData.price) || 0,
       };
 
-      updateMattressProduct(currentProduct.id, updatedProduct);
-      resetForm();
-      setCurrentProduct(null);
-      setIsEditDialogOpen(false);
+      try {
+        await updateMattressProduct(currentProduct.id, updatedProduct);
+        resetForm();
+        setCurrentProduct(null);
+        setIsEditDialogOpen(false);
+      } catch (error) {
+        console.error("Failed to update product:", error);
+      }
     }
   };
 
@@ -172,16 +184,26 @@ const MattressMaster = () => {
   };
 
   // Handle delete confirmation
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (currentProduct) {
-      deleteMattressProduct(currentProduct.id);
-      setCurrentProduct(null);
-      setIsDeleteDialogOpen(false);
+      try {
+        await deleteMattressProduct(currentProduct.id);
+        setCurrentProduct(null);
+        setIsDeleteDialogOpen(false);
+      } catch (error) {
+        console.error("Failed to delete product:", error);
+      }
     }
   };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
+      {isLoading && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold">Mattress Master</h1>
 
@@ -193,12 +215,13 @@ const MattressMaster = () => {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              disabled={isLoading}
             />
           </div>
 
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto" disabled={isLoading}>
                 <Plus className="mr-2 h-4 w-4" /> Add Product
               </Button>
             </DialogTrigger>
@@ -213,6 +236,7 @@ const MattressMaster = () => {
                   <Select
                     value={formData.company}
                     onValueChange={handleCompanyChange}
+                    disabled={isSaving}
                   >
                     <SelectTrigger className="w-full" id="company">
                       <SelectValue placeholder="Select company" />
@@ -232,6 +256,7 @@ const MattressMaster = () => {
                     value={formData.productName}
                     onChange={handleInputChange}
                     required
+                    disabled={isSaving}
                   />
                 </div>
 
@@ -244,6 +269,7 @@ const MattressMaster = () => {
                     onChange={handleInputChange}
                     required
                     placeholder="e.g., King, Queen, Double"
+                    disabled={isSaving}
                   />
                 </div>
 
@@ -258,11 +284,21 @@ const MattressMaster = () => {
                     required
                     min="0"
                     step="0.01"
+                    disabled={isSaving}
                   />
                 </div>
 
                 <DialogFooter>
-                  <Button type="submit">Save Product</Button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Product"
+                    )}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -304,6 +340,7 @@ const MattressMaster = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => openEditDialog(product)}
+                        disabled={isLoading || isSaving || isDeleting}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -311,6 +348,7 @@ const MattressMaster = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => openDeleteDialog(product)}
+                        disabled={isLoading || isSaving || isDeleting}
                       >
                         <Trash className="h-4 w-4" />
                       </Button>
@@ -347,6 +385,7 @@ const MattressMaster = () => {
               <Select
                 value={formData.company}
                 onValueChange={handleCompanyChange}
+                disabled={isSaving}
               >
                 <SelectTrigger className="w-full" id="edit-company">
                   <SelectValue placeholder="Select company" />
@@ -366,6 +405,7 @@ const MattressMaster = () => {
                 value={formData.productName}
                 onChange={handleInputChange}
                 required
+                disabled={isSaving}
               />
             </div>
 
@@ -377,6 +417,7 @@ const MattressMaster = () => {
                 value={formData.size}
                 onChange={handleInputChange}
                 required
+                disabled={isSaving}
               />
             </div>
 
@@ -391,11 +432,21 @@ const MattressMaster = () => {
                 required
                 min="0"
                 step="0.01"
+                disabled={isSaving}
               />
             </div>
 
             <DialogFooter>
-              <Button type="submit">Update Product</Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                    Updating...
+                  </>
+                ) : (
+                  "Update Product"
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -415,12 +466,20 @@ const MattressMaster = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground"
+              disabled={isDeleting}
             >
-              Delete
+              {isDeleting ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
