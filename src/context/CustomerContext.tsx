@@ -151,7 +151,6 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({
 
   // Fetch a single customer by ID
   const getCustomerById = async (id: string): Promise<Customer | null> => {
-    console.log("api called")
     try {
       // Check if we have a cached result first
       // const cachedCustomer = queryClient.getQueryData<Customer>(['customer', id]);

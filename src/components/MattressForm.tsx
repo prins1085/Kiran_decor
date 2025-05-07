@@ -91,6 +91,32 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
         discountedMaterialCost + Number(transportationFee || 0);
       setTotalCost(calculatedTotal);
       // Pass both the total and the form details to parent
+
+      const reportsData = [
+        {
+          DESCRIPTION : "MAIN FABRIC - MATTRESS",
+          QTY: area,
+          RATE: pricePerUnit,
+          TOTAL: materialCost,
+          DISCOUNT: discountAmount,
+          FINAL_TOTAL: discountedMaterialCost,  
+          TYPE: "FAB"
+        },
+        {
+          DESCRIPTION : "TRANSPORTATION COST - MATTRESS",
+          QTY: 1,
+          RATE: transportationFee,
+          TOTAL: transportationFee,
+          DISCOUNT: 0,
+          FINAL_TOTAL: transportationFee,  
+          TYPE: "TAIL"
+        },
+      ]
+
+      const filteredReportsData = reportsData.filter(
+        item => Number(item.RATE) > 0
+      );
+
       onTotalChange(calculatedTotal, {
         company,
         width,
@@ -105,7 +131,8 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
         discount: discountAmount,
         discountedMaterialCost,
         beforeDiscountPrice: discountedMaterialCost,
-        afterDiscountPrice: calculatedTotal
+        afterDiscountPrice: calculatedTotal,
+        reportsData: filteredReportsData
       });
     } else {
       setTotalCost(0);

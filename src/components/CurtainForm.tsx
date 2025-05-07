@@ -182,6 +182,122 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       sheerCostAfterDiscount +
       panelCost +
       weightDoriCost;
+
+      const reportsData = [
+        {
+          DESCRIPTION : "MAIN FABRIC - CURTAIN",
+          QTY: calculations.totalMeters,
+          RATE: prices.perMeter,
+          TOTAL: totalLeather,
+          DISCOUNT: materialDiscount,
+          FINAL_TOTAL: materialCostAfterDiscount,  
+          TYPE: "FAB"
+        },
+        {
+          DESCRIPTION : "DIMOUT FABRIC - CURTAIN",
+          QTY: calculations.dimoutMeters,
+          RATE: prices.dimoutPerMeter,
+          TOTAL: dimoutCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: dimoutCost,  
+          TYPE: "FAB"
+        },
+        {
+          DESCRIPTION : "SHEER FABRIC - CURTAIN",
+          QTY: calculations.sheerMeters,
+          RATE: prices.sheerPerMeter,
+          TOTAL: sheerCost,
+          DISCOUNT: sheerDiscount,
+          FINAL_TOTAL: sheerCostAfterDiscount,  
+          TYPE: "FAB"
+        },
+        {
+          DESCRIPTION : "CHANNEL - CURTAIN",
+          QTY: calculations.channelFeet,
+          RATE: prices.channelPerFeet,
+          TOTAL: channelFeetCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: channelFeetCost,  
+          TYPE: "TAIL"
+        },
+        {
+          DESCRIPTION : "CHANNEL MOTOR - CURTAIN",
+          QTY: 1,
+          RATE: prices.motorPrice,
+          TOTAL: motorCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: motorCost,  
+          TYPE: "TAIL"
+        },
+        {
+          DESCRIPTION : "CHANNEL REMOTE - CURTAIN",
+          QTY: 1,
+          RATE: prices.remotePrice,
+          TOTAL: remoteCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: remoteCost,  
+          TYPE: "TAIL"
+        },
+        {
+          DESCRIPTION : "SECOND CHANNEL - CURTAIN",
+          QTY: calculations.channelFeet2,
+          RATE: prices.channelPerFeet2,
+          TOTAL: channelFeetCost2,
+          DISCOUNT: 0,
+          FINAL_TOTAL: channelFeetCost2,  
+          TYPE: "TAIL"
+        },
+        {
+          DESCRIPTION : "SECOND CHANNEL MOTOR - CURTAIN",
+          QTY: 1,
+          RATE: prices.motorPrice2,
+          TOTAL: motorCost2,
+          DISCOUNT: 0,
+          FINAL_TOTAL: motorCost2,  
+          TYPE: "TAIL"
+        },
+        {
+          DESCRIPTION : "SECOND CHANNEL REMOTE - CURTAIN",
+          QTY: 1,
+          RATE: prices.remotePrice2,
+          TOTAL: remoteCost2,
+          DISCOUNT: 0,
+          FINAL_TOTAL: remoteCost2,  
+          TYPE: "TAIL"
+        },
+        {
+          DESCRIPTION : "LABOUR COST - CURTAIN",
+          QTY: 1,
+          RATE: laborCost + laborCost2,
+          TOTAL: laborCost + laborCost2,
+          DISCOUNT: 0,
+          FINAL_TOTAL: laborCost + laborCost2,  
+          TYPE: "TAIL"
+        },
+        {
+          DESCRIPTION : "PANEL - CURTAIN",
+          QTY: prices.panelMeters,
+          RATE: prices.panelPerMeter,
+          TOTAL: panelCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: panelCost,  
+          TYPE: "TAIL"
+        },
+        {
+          DESCRIPTION : "WEIGHT DORI - CURTAIN",
+          QTY: calculations.weightDoriMeters,
+          RATE: prices.weightDoriPerMeter,
+          TOTAL: weightDoriCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: weightDoriCost,  
+          TYPE: "TAIL"
+        }
+      ];
+
+      const filteredReportsData = reportsData.filter(
+        item => Number(item.RATE) > 0
+      );
+
     const details: any = {
       width: dimensions.width,
       height: dimensions.height,
@@ -204,6 +320,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
       discount: materialDiscount + sheerDiscount,
       beforeDiscountPrice : materialDiscount + sheerDiscount + total,
       afterDiscountPrice : total,
+      reportsData: filteredReportsData
     };
     if (Number(prices.sheerPerMeter || 0) > 0) {
       details.labor2 = prices.labor2;

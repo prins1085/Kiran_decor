@@ -129,6 +129,40 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
 
       setCalculations(updatedCalculations);
 
+
+      const reportsData = [
+        {
+          DESCRIPTION : "MAIN FABRIC - BLIND",
+          QTY: blindType === "roman" ? updatedCalculations.totalMeters : updatedCalculations.totalSqFeet,
+          RATE: blindType === "roman" ? prices.perMeter : prices.perSqFeet,
+          TOTAL: updatedCalculations.fabricCost,
+          DISCOUNT: updatedCalculations.discount,
+          FINAL_TOTAL: updatedCalculations.fabricCost - updatedCalculations.discount,  
+          TYPE: "FAB"
+        },
+        {
+          DESCRIPTION : "DIMOUT FABRIC - BLIND",
+          QTY: updatedCalculations.dimoutMeters,
+          RATE: prices.dimoutPerMeter,
+          TOTAL: updatedCalculations.dimoutCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: updatedCalculations.dimoutCost,  
+          TYPE: "FAB"
+        },
+        {
+          DESCRIPTION : "FITTING COST - BLIND",
+          QTY: 1,
+          RATE: prices.fittingCost,
+          TOTAL: prices.fittingCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: prices.fittingCost,  
+          TYPE: "TAIL"
+        },
+      ]
+
+      const filteredReportsData = reportsData.filter(
+        item => Number(item.RATE) > 0
+      );
       const details = {
         blindType,
         width: dimensions.width,
@@ -153,6 +187,7 @@ const BlindForm = ({ onTotalChange, initialValues }: BlindFormProps) => {
         beforeDiscountPrice:
           updatedCalculations.discount + updatedCalculations.discountedTotal,
         afterDiscountPrice: updatedCalculations.totalCost,
+        reportsData: filteredReportsData
       };
 
       onTotalChange(updatedCalculations.discountedTotal, details);

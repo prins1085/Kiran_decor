@@ -48,6 +48,49 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
         Number(transportationFee || 0);
       setTotalCost(calculatedTotal);
 
+      const reportsData = [
+        {
+          DESCRIPTION : "MAIN MATERIAL - SOFA",
+          QTY: sizeInFeet * Number(designPattern),
+          RATE: Number(pricePerFoot || 0),
+          TOTAL: materialCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: materialCost,
+          TYPE: "FAB"
+        },
+         {
+          DESCRIPTION : "MAIN FABRIC - SOFA",
+          QTY: Number(fabricMeter),
+          RATE: Number(fabricPrice || 0),
+          TOTAL: fabricCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: fabricCost,
+          TYPE: "FAB"
+        },
+         {
+          DESCRIPTION : "MAIN LEATHER - SOFA",
+          QTY: Number(leatherMeter),
+          RATE: Number(leatherPrice || 0),
+          TOTAL: leatherCost,
+          DISCOUNT: 0,
+          FINAL_TOTAL: leatherCost,
+          TYPE: "FAB"
+        },
+        {
+          DESCRIPTION : "TRANSPORTATION COST - SOFA",
+          QTY: 1,
+          RATE: transportationFee,
+          TOTAL: transportationFee,
+          DISCOUNT: 0,
+          FINAL_TOTAL: transportationFee,  
+          TYPE: "TAIL"
+        },
+      ]
+
+      const filteredReportsData = reportsData.filter(
+        item => Number(item.RATE) > 0
+      );
+
       // Pass both the total and the form details to parent
       onTotalChange(calculatedTotal, {
         sofaSize,
@@ -59,6 +102,7 @@ const SofaForm = ({ onTotalChange, initialValues }: SofaFormProps) => {
         fabricMeter,
         fabricPrice,
         sizeInFeet,
+        reportsData: filteredReportsData
       });
     } else {
       setTotalCost(0);
