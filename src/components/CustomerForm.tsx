@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useCustomer, Customer } from "@/context/CustomerContext";
@@ -16,7 +15,7 @@ interface CustomerFormProps {
 }
 
 const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
-  const { addCustomer, updateCustomer } = useCustomer();
+  const { addCustomer, updateCustomer, isSaving } = useCustomer();
   const [customerData, setCustomerData] = useState({
     name: "",
     phone: "",
@@ -90,7 +89,10 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
         await addCustomer(newCustomer);
       }
       
+      // Only close the dialog after successful API call
       onClose();
+    } catch (error) {
+      console.error("Error submitting form:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -102,7 +104,12 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
         <h2 className="text-xl sm:text-2xl font-semibold">
           {editingCustomer ? "Edit Customer" : "New Customer"}
         </h2>
-        <Button variant="ghost" size="icon" onClick={onClose} disabled={isSubmitting}>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onClose} 
+          disabled={isSubmitting || isSaving}
+        >
           <X className="h-6 w-6" />
         </Button>
       </div>
@@ -124,7 +131,7 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
                   value={customerData.name}
                   onChange={(e) => setCustomerData({ ...customerData, name: e.target.value })}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isSaving}
                 />
               </div>
               
@@ -136,7 +143,7 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
                   value={customerData.phone}
                   onChange={(e) => setCustomerData({ ...customerData, phone: e.target.value })}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isSaving}
                 />
               </div>
               
@@ -147,7 +154,7 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
                   placeholder="Enter architect name (optional)"
                   value={customerData.architect}
                   onChange={(e) => setCustomerData({ ...customerData, architect: e.target.value })}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isSaving}
                 />
               </div>
             </div>
@@ -155,6 +162,7 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
             <QuotationForm 
               initialItems={quotationData}
               onQuotationChange={setQuotationData}
+              disabled={isSubmitting || isSaving}
             />
           </motion.div>
 
@@ -163,13 +171,13 @@ const CustomerForm = ({ onClose, editingCustomer }: CustomerFormProps) => {
               type="button" 
               variant="outline" 
               onClick={onClose}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSaving}
             >
               Cancel
             </Button>
             <LoadingButton 
               type="submit"
-              loading={isSubmitting}
+              loading={isSubmitting || isSaving}
             >
               {editingCustomer ? "Update Customer" : "Create Customer"}
             </LoadingButton>

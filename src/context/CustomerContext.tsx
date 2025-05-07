@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode } from "react";
 import { toast } from "@/hooks/use-toast";
 import axios from "axios";
@@ -30,9 +29,9 @@ export interface Customer {
 
 interface CustomerContextType {
   customers: Customer[];
-  addCustomer: (customer: Customer) => void;
-  updateCustomer: (id: string, updatedCustomer: Customer) => void;
-  deleteCustomer: (id: string) => void;
+  addCustomer: (customer: Customer) => Promise<void>;
+  updateCustomer: (id: string, updatedCustomer: Customer) => Promise<void>;
+  deleteCustomer: (id: string) => Promise<void>;
   getCustomerById: (id: string) => Promise<Customer | null>;
   isLoading: boolean;
   isSaving: boolean;
@@ -201,6 +200,7 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({
         description: "Failed to save your changes.",
         variant: "destructive",
       });
+      throw error; // Re-throw the error to be caught by the caller
     },
   });
 
@@ -234,6 +234,7 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({
         description: "Failed to update your changes.",
         variant: "destructive",
       });
+      throw error; // Re-throw the error to be caught by the caller
     },
   });
 
@@ -259,19 +260,20 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({
         description: "Failed to delete the customer.",
         variant: "destructive",
       });
+      throw error; // Re-throw the error to be caught by the caller
     },
   });
 
-  const addCustomer = (customer: Customer) => {
-    addMutation.mutate(customer);
+  const addCustomer = async (customer: Customer): Promise<void> => {
+    return addMutation.mutateAsync(customer);
   };
 
-  const updateCustomer = (id: string, updatedCustomer: Customer) => {
-    updateMutation.mutate({ id, updatedCustomer });
+  const updateCustomer = async (id: string, updatedCustomer: Customer): Promise<void> => {
+    return updateMutation.mutateAsync({ id, updatedCustomer });
   };
 
-  const deleteCustomer = (id: string) => {
-    deleteMutation.mutate(id);
+  const deleteCustomer = async (id: string): Promise<void> => {
+    return deleteMutation.mutateAsync(id);
   };
 
   return (

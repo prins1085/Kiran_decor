@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { Plus, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import CurtainForm from "./CurtainForm";
@@ -30,7 +29,13 @@ interface QuotationItem {
   details?: Record<string, any>;
 }
 
-const QuotationForm = ({ initialItems = [], onQuotationChange }: { initialItems?: QuotationItem[], onQuotationChange?: (items: QuotationItem[]) => void }) => {
+interface QuotationFormProps {
+  initialItems?: QuotationItem[];
+  onQuotationChange?: (items: QuotationItem[]) => void;
+  disabled?: boolean;
+}
+
+const QuotationForm = ({ initialItems = [], onQuotationChange, disabled = false }: QuotationFormProps) => {
   const [selectedType, setSelectedType] = useState<string>("");
   const [itemName, setItemName] = useState("");
   const [items, setItems] = useState<QuotationItem[]>([]);
@@ -148,7 +153,7 @@ const QuotationForm = ({ initialItems = [], onQuotationChange }: { initialItems?
     
     const commonProps = {
       onTotalChange: (total: number, details?: Record<string, any>) => updateItemTotal(item.id, total, details),
-      initialValues: initialValues
+      initialValues: initialValues,
     };
     
     switch (item.type) {
@@ -171,7 +176,11 @@ const QuotationForm = ({ initialItems = [], onQuotationChange }: { initialItems?
         <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
           <div className="space-y-2 w-full sm:w-auto sm:min-w-[180px]">
             <Label htmlFor="item-type">Item Type</Label>
-            <Select value={selectedType} onValueChange={setSelectedType}>
+            <Select 
+              value={selectedType} 
+              onValueChange={setSelectedType}
+              disabled={disabled}
+            >
               <SelectTrigger id="item-type" className="w-full">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
@@ -192,13 +201,14 @@ const QuotationForm = ({ initialItems = [], onQuotationChange }: { initialItems?
               onChange={(e) => setItemName(e.target.value)}
               placeholder="Enter item name"
               className="w-full"
+              disabled={disabled}
             />
           </div>
           
           <Button 
             onClick={handleAddItem} 
             className="gap-1 whitespace-nowrap w-full sm:w-auto"
-            disabled={!selectedType || !itemName.trim()}
+            disabled={!selectedType || !itemName.trim() || disabled}
           >
             <Plus className="h-4 w-4" />
             Add Item
@@ -218,7 +228,7 @@ const QuotationForm = ({ initialItems = [], onQuotationChange }: { initialItems?
                 <Card>
                   <div
                     className="flex justify-between items-center p-4 cursor-pointer border-b bg-accent/50 hover:bg-accent/70 transition-colors"
-                    onClick={() => toggleItem(item.id)}
+                    onClick={() => !disabled && toggleItem(item.id)}
                   >
                     <div className="flex items-center space-x-3">
                       {item.isOpen ? (
@@ -240,8 +250,9 @@ const QuotationForm = ({ initialItems = [], onQuotationChange }: { initialItems?
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={(e) => handleRemoveItem(item.id, e)}
-                        type="button" // Make sure it doesn't submit the form
+                        onClick={(e) => !disabled && handleRemoveItem(item.id, e)}
+                        type="button"
+                        disabled={disabled}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
