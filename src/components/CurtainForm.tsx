@@ -650,7 +650,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                   />
                 </div>
 
-                <div className="space-y-1">
+                {/* <div className="space-y-1">
                   <Label htmlFor="fitting-cost">Fitting Cost</Label>
                   <Input
                     id="fitting-cost"
@@ -661,7 +661,7 @@ const CurtainForm = ({ onTotalChange, initialValues }: CurtainFormProps) => {
                     }
                     placeholder="Enter fitting cost"
                   />
-                </div>
+                </div> */}
               </>
             )}
           </div>

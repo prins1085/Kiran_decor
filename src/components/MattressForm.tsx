@@ -228,7 +228,7 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
       </div>
 
       {/* Height and Display Height Inputs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
         {/* Width Input */}
         <div className="space-y-1">
           <Label htmlFor="mattress-width">Width (inches)</Label>
@@ -252,7 +252,7 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
             className="w-full"
           />
         </div>
-        <div className="space-y-1">
+        {/* <div className="space-y-1">
           <Label htmlFor="mattress-height">Height (inches)</Label>
           <Input
             id="mattress-height"
@@ -262,12 +262,9 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
             placeholder="Enter height"
             className="w-full"
           />
-        </div>
-      </div>
+        </div> */}
 
-      {/* Discount and Transportation Fee */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-        <div className="space-y-1">
+<div className="space-y-1">
           <Label htmlFor="material-discount">Discount (%)</Label>
           <Input
             id="material-discount"
@@ -288,7 +285,7 @@ const MattressForm = ({ onTotalChange, initialValues }: MattressFormProps) => {
             className="w-full"
           />
         </div>
-      </div>
+      </div>      
 
       {/* Cost Breakdown Card */}
       <Card className="border-t border-border mt-4 bg-accent/30 w-full">
