@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import MattressMaster from "./pages/MattressMaster";
 import { MattressProvider } from "./context/MattressContext";
 import Layout from "./components/Layout";
+import { PDFExportProvider } from "@/context/PDFExportContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,17 +26,19 @@ const App = () => (
       <TooltipProvider>
         <CustomerProvider>
           <MattressProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Layout>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/mattress-master" element={<MattressMaster />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+            <PDFExportProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Layout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/mattress-master" element={<MattressMaster />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
                 </Layout>
-            </BrowserRouter>
+              </BrowserRouter>
+            </PDFExportProvider>
           </MattressProvider>
         </CustomerProvider>
       </TooltipProvider>

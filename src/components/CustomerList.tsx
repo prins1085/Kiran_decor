@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Plus, Edit2, Trash2, Search, ChevronRight, LayoutGrid, Users, Download, Printer, Share } from "lucide-react";
 import { useCustomer } from "@/context/CustomerContext";
@@ -32,6 +31,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataLoader, TableLoader } from "@/components/ui/loader";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { usePDFExport } from "@/context/PDFExportContext";
 
 const CustomerList = () => {
   const { customers, deleteCustomer, getCustomerById, isLoading } = useCustomer();
@@ -42,8 +42,7 @@ const CustomerList = () => {
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");  // Default to grid view
   const [loadingCustomerId, setLoadingCustomerId] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState<string | null>(null);
-  const [isSharing, setIsSharing] = useState<string | null>(null);
+  const { exportCustomerPDFs, isExporting, error } = usePDFExport();
 
   const handleEdit = async (customer: Customer) => {
     try {
@@ -77,100 +76,12 @@ const CustomerList = () => {
     setEditingCustomer(null);
   };
 
-  const calculateTotalQuotation = (customer: Customer): number => {
-    return customer.quotations.reduce((total, quotation) => {
-      return total + quotation.items.reduce((sum, item) => sum + item.total, 0);
-    }, 0);
-  };
-
   const exportToPDF = async (customer: Customer) => {
     try {
-      setIsExporting(customer.id);
-      const formattedDate = new Date(customer.quotations[0]?.date || new Date()).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-
-      const finalJson = {
-        date: formattedDate,
-        customer: {
-          name: customer.name,
-          phone: customer.phone,
-        },
-        executive: "SURESH BHAI",
-        items: customer.quotations[0]?.items.map((elem) => {
-          const discount = elem.details?.discount || 0;
-          return {
-            description: `${elem.name} (${elem.type})`,
-            total: (elem.total - discount).toFixed(0),  
-            discount: discount.toFixed(0),
-            total_amount: Number(elem.total.toFixed(0)),
-          };
-        }) || [],
-      };
-
-      await fetch("http://192.168.29.138:9090/RPT/invoice", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(finalJson),
-      })
-        .then(response => response.blob()) 
-        .then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-      
-          const customerName = finalJson.customer.name.replace(/\s+/g, "_");
-          a.download = `${customerName}_Quotation.pdf`;
-      
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url); 
-          
-          toast({
-            title: "PDF Generated",
-            description: `Quotation for ${customer.name} has been downloaded.`,
-          });
-        })
-        .catch(error => {
-          console.error("Error downloading the file:", error);
-          toast({
-            title: "Error Generating PDF",
-            description: "Failed to generate PDF. Please try again.",
-            variant: "destructive",
-          });
-        });
-    } finally {
-      setIsExporting(null);
-    }
-  };
-
-  const shareOnWhatsApp = (customer: Customer) => {
-    try {
-      setIsSharing(customer.id);
-      
-      // Format the phone number for WhatsApp API
-      let phoneNumber = customer.phone.replace(/\D/g, '');
-      if (!phoneNumber.startsWith('+')) {
-        phoneNumber = `+91${phoneNumber}`; // Adding India country code as default
-      }
-      
-      // Create message text
-      const message = encodeURIComponent(`Hello ${customer.name}, here's your quotation from QuotePro!`);
-      
-      // Open WhatsApp with the message
-      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-      
-      toast({
-        title: "Opening WhatsApp",
-        description: `Sharing quotation with ${customer.name}.`,
-      });
-    } finally {
-      setIsSharing(null);
+      await exportCustomerPDFs(customer);
+    } catch (error) {
+      // Error is already handled in the context, but you can add additional handling here if needed
+      console.error("Failed to export PDFs:", error);
     }
   };
 
@@ -343,13 +254,13 @@ const CustomerList = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              {/* <DropdownMenu>
+                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <LoadingButton 
                                     variant="ghost" 
                                     size="icon" 
                                     className="h-8 w-8"
-                                    loading={isExporting === customer.id || isSharing === customer.id}
+                                    loading={isExporting === customer.id}
                                   >
                                     <Share className="h-4 w-4" />
                                   </LoadingButton>
@@ -359,12 +270,8 @@ const CustomerList = () => {
                                     <Download className="mr-2 h-4 w-4" />
                                     <span>Export PDF</span>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => shareOnWhatsApp(customer)}>
-                                    <Printer className="mr-2 h-4 w-4" />
-                                    <span>Share on WhatsApp</span>
-                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
-                              </DropdownMenu> */}
+                              </DropdownMenu>
                               <LoadingButton
                                 variant="ghost"
                                 size="icon"
@@ -421,13 +328,13 @@ const CustomerList = () => {
                             <p className="text-muted-foreground text-sm">{customer.phone}</p>
                           </div>
                           <div className="flex gap-1">
-                            {/* <DropdownMenu>
+                            <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <LoadingButton 
                                   variant="ghost" 
                                   size="icon" 
                                   className="h-8 w-8"
-                                  loading={isExporting === customer.id || isSharing === customer.id}
+                                  loading={isExporting === customer.id}
                                 >
                                   <Share className="h-4 w-4" />
                                 </LoadingButton>
@@ -437,12 +344,8 @@ const CustomerList = () => {
                                   <Download className="mr-2 h-4 w-4" />
                                   <span>Export PDF</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => shareOnWhatsApp(customer)}>
-                                  <Printer className="mr-2 h-4 w-4" />
-                                  <span>Share on WhatsApp</span>
-                                </DropdownMenuItem>
                               </DropdownMenuContent>
-                            </DropdownMenu> */}
+                            </DropdownMenu>
                             <LoadingButton
                               variant="ghost"
                               size="icon"
